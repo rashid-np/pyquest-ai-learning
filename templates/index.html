@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PyQuest — Python Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--ac:#c8a96e;--ac2:#7eb8c9;--er:#e07070;--ok:#6ec899;--pu:#a78bfa;--r:10px;--tr:.26s cubic-bezier(.4,0,.2,1);--sf:'DM Serif Display',Georgia,serif;--mo:'DM Mono','Courier New',monospace;--ss:'DM Sans',system-ui,sans-serif;}
+[data-theme=dark]{--bg:#0a0a0c;--bg2:#111114;--bg3:#18181d;--cd:rgba(20,20,26,.95);--b:#252530;--b2:#32323f;--tx:#e8e6e0;--tx2:#8a8880;--tx3:#4c4a48;--inp:#0d0d10;}
+[data-theme=light]{--bg:#eae8e0;--bg2:#dddbd3;--bg3:#d0cec6;--cd:rgba(245,243,238,.97);--b:#c4c2b8;--b2:#a8a69e;--tx:#1a1917;--tx2:#5c5a54;--tx3:#9a9890;--inp:#f5f3ee;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--tx);font-family:var(--ss);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;transition:background var(--tr),color var(--tr);}
+#bgCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;transition:opacity .5s;}
+[data-theme=dark] #bgCanvas{opacity:1;}[data-theme=light] #bgCanvas{opacity:.08;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 40%,var(--bg) 100%);pointer-events:none;z-index:1;}
+.app{position:relative;z-index:2;max-width:960px;margin:0 auto;padding:0 20px 80px;}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 0 13px;border-bottom:1px solid var(--b);margin-bottom:32px;}
+.logo{font-family:var(--sf);font-size:1.45rem;letter-spacing:-.02em;cursor:pointer;}
+.logo span{color:var(--ac);font-style:italic;}
+.hdr-r{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.score-strip{display:none;background:var(--bg3);border:1px solid var(--b);border-radius:8px;overflow:hidden;font-family:var(--mo);font-size:.74rem;}
+.score-strip.show{display:flex;}
+.sc{padding:5px 11px;color:var(--tx2);border-right:1px solid var(--b);}
+.sc:last-child{border-right:none;}
+.sc strong{color:var(--ac);margin-left:3px;}
+.sc.un{color:var(--ac2);}
+.user-chip{display:none;font-family:var(--mo);font-size:.74rem;padding:5px 12px;border-radius:7px;border:1px solid var(--b);background:var(--bg3);color:var(--ac2);}
+.user-chip.show{display:flex;align-items:center;gap:5px;}
+.hdr-btn{font-family:var(--mo);font-size:.7rem;padding:5px 11px;border-radius:7px;border:1px solid var(--b);background:var(--bg3);color:var(--tx2);cursor:pointer;letter-spacing:.05em;text-transform:uppercase;transition:all var(--tr);display:none;align-items:center;gap:5px;}
+.hdr-btn:hover{border-color:var(--ac);color:var(--ac);}
+.hdr-btn.show{display:flex;}
+.hdr-btn.gold{border-color:rgba(200,169,110,.35);color:var(--ac);background:rgba(200,169,110,.07);}
+.hdr-btn.gold:hover{background:rgba(200,169,110,.14);}
+.icon-btn{width:33px;height:33px;border-radius:8px;border:1px solid var(--b);background:var(--bg3);color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all var(--tr);flex-shrink:0;}
+.icon-btn:hover{border-color:var(--ac);color:var(--ac);}
+#themeBtn{display:flex!important;}
+
+/* SCREENS */
+.screen{display:none;}
+.screen.active{display:block;animation:sIn .38s cubic-bezier(.4,0,.2,1);}
+.screen.sback{animation:sBk .38s cubic-bezier(.4,0,.2,1);}
+@keyframes sIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes sBk{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+.esc-bar{display:flex;align-items:center;gap:9px;margin-bottom:20px;flex-wrap:wrap;}
+.esc-btn{display:inline-flex;align-items:center;gap:5px;font-family:var(--mo);font-size:.71rem;color:var(--tx2);background:var(--bg3);border:1px solid var(--b);border-radius:6px;cursor:pointer;padding:4px 10px;letter-spacing:.05em;text-transform:uppercase;transition:all var(--tr);}
+.esc-btn:hover{border-color:var(--ac);color:var(--ac);}
+.esc-btn::before{content:'←';}
+.esc-title{font-family:var(--mo);font-size:.66rem;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;}
+
+/* LOGIN */
+.login-wrap{min-height:76vh;display:grid;grid-template-columns:1fr 400px;gap:60px;align-items:center;}
+@media(max-width:740px){.login-wrap{grid-template-columns:1fr;min-height:auto;gap:28px;}.lhero{display:none;}}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;font-family:var(--mo);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ac);padding:4px 12px;border:1px solid rgba(200,169,110,.3);border-radius:20px;background:rgba(200,169,110,.06);margin-bottom:18px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--ac);box-shadow:0 0 6px var(--ac);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.hero-h{font-family:var(--sf);font-size:clamp(2.4rem,4vw,3.4rem);line-height:1.1;margin-bottom:16px;letter-spacing:-.02em;}
+.hero-h em{color:var(--ac);font-style:italic;}
+.hero-p{font-size:.88rem;color:var(--tx2);max-width:370px;line-height:1.8;margin-bottom:28px;}
+.xp-card{background:var(--bg3);border:1px solid var(--b);border-radius:10px;padding:14px 17px;max-width:310px;}
+.xp-row{display:flex;justify-content:space-between;margin-bottom:6px;}
+.xp-lbl{font-family:var(--mo);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);}
+.xp-val{font-family:var(--mo);font-size:.72rem;color:var(--ac);}
+.xp-bar{height:3px;background:var(--b);border-radius:2px;overflow:hidden;}
+.xp-fill{height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:2px;animation:xpg 2.4s ease forwards;}
+@keyframes xpg{to{width:68%}}
+.xp-tags{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;}
+.xtag{font-family:var(--mo);font-size:.64rem;padding:2px 8px;border-radius:4px;border:1px solid var(--b);background:var(--bg2);color:var(--tx2);}
+.xtag.ok{border-color:rgba(110,200,153,.3);background:rgba(110,200,153,.07);color:var(--ok);}
+.lcard{background:var(--cd);border:1px solid var(--b);border-radius:16px;padding:32px;position:relative;overflow:hidden;backdrop-filter:blur(10px);}
+.lcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--ac),var(--ac2));}
+.lcard::after{content:'';position:absolute;top:-50px;right:-50px;width:160px;height:160px;background:radial-gradient(circle,rgba(200,169,110,.07) 0%,transparent 70%);pointer-events:none;}
+.ltitle{font-family:var(--sf);font-size:1.4rem;margin-bottom:3px;}
+.lsub{font-size:.82rem;color:var(--tx2);margin-bottom:20px;}
+.tabs{display:flex;background:var(--bg2);border:1px solid var(--b);border-radius:8px;padding:3px;margin-bottom:20px;gap:3px;}
+.tab{flex:1;padding:7px;text-align:center;font-family:var(--mo);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;border-radius:6px;cursor:pointer;border:none;background:none;color:var(--tx2);transition:all var(--tr);}
+.tab.on{background:var(--cd);color:var(--ac);border:1px solid var(--b2);box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.field{margin-bottom:14px;}
+.flbl{display:block;font-family:var(--mo);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:5px;}
+.fwrap{position:relative;}
+.finp{width:100%;background:var(--inp);border:1px solid var(--b);border-radius:var(--r);padding:10px 14px;color:var(--tx);font-family:var(--ss);font-size:.92rem;outline:none;transition:border-color var(--tr),box-shadow var(--tr);}
+.finp::placeholder{color:var(--tx3);}
+.finp:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(200,169,110,.1);}
+.finp.err{border-color:var(--er);}
+.ptog{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--tx3);cursor:pointer;font-size:.74rem;font-family:var(--mo);padding:2px 5px;}
+.ptog:hover{color:var(--ac);}
+.ferr{font-size:.72rem;color:var(--er);margin-top:4px;min-height:16px;font-family:var(--mo);}
+.sbar{height:3px;background:var(--b);border-radius:2px;overflow:hidden;margin:6px 0 3px;}
+.sfill{height:100%;border-radius:2px;width:0;transition:width .3s,background .3s;}
+.slbl{font-family:var(--mo);font-size:.66rem;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 20px;border-radius:var(--r);font-family:var(--ss);font-size:.88rem;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all var(--tr);white-space:nowrap;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn:active:not(:disabled){transform:scale(.98);}
+.btn-p{background:var(--ac);color:#1a1610;border-color:var(--ac);width:100%;padding:12px;font-size:.93rem;font-weight:600;}
+.btn-p:hover:not(:disabled){background:#d4b87a;box-shadow:0 4px 18px rgba(200,169,110,.2);}
+.btn-o{background:transparent;border-color:var(--b2);color:var(--tx2);}
+.btn-o:hover:not(:disabled){border-color:var(--ac);color:var(--ac);}
+.btn-g{background:var(--bg3);border-color:var(--b);color:var(--tx2);}
+.btn-g:hover:not(:disabled){border-color:var(--b2);color:var(--tx);}
+.btn-pu{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.35);color:var(--pu);}
+.btn-pu:hover:not(:disabled){background:rgba(167,139,250,.18);}
+
+/* HOME */
+.pg-title{font-family:var(--sf);font-size:1.85rem;letter-spacing:-.02em;margin-bottom:5px;}
+.pg-sub{color:var(--tx2);font-size:.87rem;margin-bottom:28px;}
+.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:28px;}
+@media(max-width:680px){.mode-grid{grid-template-columns:1fr;}}
+/* Hangman */
+.hm-gallows-wrap{background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:10px;flex-shrink:0;}
+.hm-opt{padding:7px 14px;border-radius:8px;border:1px solid var(--b2);background:var(--cd);font-family:var(--mo);font-size:.84rem;color:var(--tx);cursor:pointer;transition:all .18s;}
+.hm-opt:hover{border-color:#e89b3a;color:#e89b3a;transform:translateY(-1px);}
+.hm-opt.used-wrong{opacity:.25;cursor:not-allowed;pointer-events:none;border-color:var(--er);color:var(--er);}
+.hm-opt.used-ok{opacity:.25;cursor:not-allowed;pointer-events:none;border-color:var(--ok);color:var(--ok);}
+.hm-blank{display:inline-flex;align-items:center;justify-content:center;min-width:72px;height:24px;padding:0 8px;border:2px dashed var(--b2);border-radius:5px;background:rgba(232,155,58,.04);font-family:var(--mo);font-size:.76rem;color:var(--tx3);cursor:pointer;transition:all .15s;vertical-align:middle;}
+.hm-blank.sel{border-color:#e89b3a;border-style:solid;background:rgba(232,155,58,.1);color:#e89b3a;}
+.hm-blank.filled{border-style:solid;border-color:var(--ac2);background:rgba(126,184,201,.1);color:var(--ac2);}
+.hm-blank.correct{border-style:solid;border-color:var(--ok);background:rgba(110,200,153,.1);color:var(--ok);}
+.hm-blank.wrong{border-style:solid;border-color:var(--er);background:rgba(224,112,112,.1);color:var(--er);}
+.hm-heart{font-size:1.1rem;transition:all .3s;}
+.hm-heart.dead{filter:grayscale(1);opacity:.3;transform:scale(.85);}
+.mode-card{background:var(--cd);border:1px solid var(--b);border-radius:14px;padding:22px 18px;cursor:pointer;transition:all var(--tr);position:relative;overflow:hidden;text-align:left;}
+.mode-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--mc,var(--b));}
+.mode-card:hover{border-color:var(--b2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.mode-icon{font-size:1.35rem;margin-bottom:11px;display:block;}
+.mode-title{font-family:var(--sf);font-size:1.05rem;margin-bottom:4px;}
+.mode-desc{font-size:.78rem;color:var(--tx2);line-height:1.55;}
+.mode-tag{display:inline-block;font-family:var(--mo);font-size:.6rem;padding:2px 7px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;margin-top:8px;border:1px solid;}
+
+/* SETUP */
+.step-lbl{font-family:var(--mo);font-size:.67rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:11px;}
+.step-lbl span{color:var(--ac);margin-right:5px;}
+.diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px;}
+@media(max-width:580px){.diff-grid{grid-template-columns:1fr;}}
+.dc{background:var(--cd);border:1px solid var(--b);border-radius:11px;padding:16px;cursor:pointer;transition:all var(--tr);}
+.dc:hover{border-color:var(--b2);transform:translateY(-1px);}
+.dc.se{border-color:var(--ok);background:rgba(110,200,153,.04);}
+.dc.sm{border-color:var(--ac);background:rgba(200,169,110,.04);}
+.dc.sh{border-color:var(--er);background:rgba(224,112,112,.04);}
+.dn{font-family:var(--sf);font-size:1rem;margin-bottom:2px;}
+.dd{font-size:.77rem;color:var(--tx2);}
+.db{display:inline-block;font-family:var(--mo);font-size:.63rem;padding:2px 7px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;margin-top:8px;}
+.be{background:rgba(110,200,153,.13);color:var(--ok);}
+.bm{background:rgba(200,169,110,.13);color:var(--ac);}
+.bh{background:rgba(224,112,112,.13);color:var(--er);}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:7px;margin-bottom:4px;}
+.tc{background:var(--cd);border:1px solid var(--b);border-radius:9px;padding:11px 13px;cursor:pointer;transition:all var(--tr);}
+.tc:hover{border-color:var(--b2);}
+.tc.on{border-color:var(--ac2);background:rgba(126,184,201,.06);}
+.tnum{font-family:var(--mo);font-size:.62rem;color:var(--tx3);margin-bottom:2px;}
+.tname{font-size:.83rem;font-weight:500;}
+.sub-panel{background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:16px;margin-top:12px;margin-bottom:22px;display:none;}
+.sub-panel.open{display:block;animation:fd .2s ease;}
+@keyframes fd{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.sub-title{font-family:var(--mo);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:11px;}
+.sub-grid{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{padding:5px 12px;border-radius:6px;border:1px solid var(--b);background:var(--cd);font-size:.8rem;color:var(--tx2);cursor:pointer;transition:all var(--tr);}
+.chip:hover{border-color:var(--b2);color:var(--tx);}
+.chip.on{border-color:var(--ac2);background:rgba(126,184,201,.1);color:var(--ac2);}
+.gen-bar{display:flex;align-items:center;justify-content:space-between;background:var(--cd);border:1px solid var(--b);border-radius:10px;padding:13px 17px;gap:12px;}
+.gsum{font-size:.81rem;color:var(--tx2);}
+.gsum strong{color:var(--tx);}
+
+/* PIPELINE */
+.pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b);border:1px solid var(--b);border-radius:9px;overflow:hidden;margin-bottom:18px;font-family:var(--mo);}
+.ps{background:var(--cd);padding:8px 6px;text-align:center;font-size:.66rem;color:var(--tx3);transition:all .3s;}
+.ps .pl{display:block;font-size:.58rem;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px;}
+.ps .pn{color:var(--tx2);}
+.ps.run{background:rgba(200,169,110,.08);}.ps.run .pn{color:var(--ac);}
+.ps.run .pl{animation:bl 1s infinite;}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}
+.ps.ok{background:rgba(110,200,153,.07);}.ps.ok .pn{color:var(--ok);}
+.ps.er{background:rgba(224,112,112,.07);}.ps.er .pn{color:var(--er);}
+
+/* PUZZLE CARD */
+.pcard{background:var(--cd);border:1px solid var(--b);border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.phead{padding:15px 19px;border-bottom:1px solid var(--b);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.pmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;}
+.tag{font-family:var(--mo);font-size:.62rem;padding:2px 7px;border-radius:4px;letter-spacing:.05em;text-transform:uppercase;border:1px solid;}
+.t-tp{color:var(--ac2);border-color:rgba(126,184,201,.3);background:rgba(126,184,201,.08);}
+.t-e{color:var(--ok);border-color:rgba(110,200,153,.3);background:rgba(110,200,153,.08);}
+.t-m{color:var(--ac);border-color:rgba(200,169,110,.3);background:rgba(200,169,110,.08);}
+.t-h{color:var(--er);border-color:rgba(224,112,112,.3);background:rgba(224,112,112,.08);}
+.t-b{color:var(--tx2);border-color:var(--b2);background:var(--bg3);}
+.t-pu{color:var(--pu);border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.08);}
+.ptitle{font-family:var(--sf);font-size:1.15rem;}
+.chbtn{flex-shrink:0;font-family:var(--mo);font-size:.66rem;padding:5px 10px;border-radius:6px;border:1px solid var(--b);background:var(--bg3);color:var(--tx2);cursor:pointer;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;transition:all var(--tr);}
+.chbtn:hover{border-color:var(--ac);color:var(--ac);}
+.pbody{padding:18px;}
+.pstmt{font-size:.87rem;color:var(--tx2);line-height:1.7;margin-bottom:14px;padding:11px 14px;background:var(--bg2);border-radius:7px;border-left:3px solid var(--ac);}
+.code{background:var(--bg);border:1px solid var(--b);border-radius:7px;padding:15px 17px;font-family:var(--mo);font-size:.84rem;line-height:1.85;color:#a8b4c8;white-space:pre-wrap;word-break:break-all;margin-bottom:18px;}
+.blank{color:var(--ac);font-weight:500;}
+.blank-n{color:var(--ac);background:rgba(200,169,110,.12);border-radius:3px;padding:1px 4px;border:1px solid rgba(200,169,110,.2);}
+.blbl{font-family:var(--mo);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:9px;}
+.brow{display:flex;align-items:center;gap:9px;border:1px solid var(--b);border-radius:7px;padding:8px 12px;margin-bottom:8px;background:var(--inp);transition:border-color var(--tr);}
+.brow:focus-within{border-color:var(--ac);}
+.btag{font-family:var(--mo);font-size:.62rem;padding:2px 6px;border-radius:4px;background:rgba(200,169,110,.1);color:var(--ac);border:1px solid rgba(200,169,110,.2);flex-shrink:0;min-width:56px;text-align:center;letter-spacing:.04em;text-transform:uppercase;}
+.bctx{font-family:var(--mo);font-size:.69rem;color:var(--tx3);flex-shrink:0;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.binp{flex:1;background:none;border:none;outline:none;color:var(--tx);font-family:var(--mo);font-size:.9rem;caret-color:var(--ac);}
+.binp::placeholder{color:var(--tx3);}
+.pfoot{padding:13px 18px;border-top:1px solid var(--b);display:flex;gap:9px;flex-wrap:wrap;}
+
+/* RESULTS */
+.rbanner{border-radius:10px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:12px;border:1px solid;animation:fd .3s ease;}
+.rbanner.ok{background:rgba(110,200,153,.07);border-color:rgba(110,200,153,.3);}
+.rbanner.no{background:rgba(224,112,112,.07);border-color:rgba(224,112,112,.3);}
+.rdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ok .rdot{background:var(--ok);box-shadow:0 0 7px var(--ok);}
+.no .rdot{background:var(--er);box-shadow:0 0 7px var(--er);}
+.rtitle{font-family:var(--sf);font-size:1rem;margin-bottom:2px;}
+.ok .rtitle{color:var(--ok);}.no .rtitle{color:var(--er);}
+.rsub{font-size:.8rem;color:var(--tx2);}
+.ibox{border-radius:8px;padding:12px 15px;margin-bottom:11px;border:1px solid var(--b);font-size:.85rem;line-height:1.6;}
+.ibox.sb{background:var(--bg2);border-left:3px solid var(--ac2);}
+.ibox.lok{background:rgba(110,200,153,.05);border-left:3px solid var(--ok);}
+.ibox.lno{background:rgba(167,139,250,.05);border-left:3px solid var(--pu);}
+.ibox.hnt{background:rgba(200,169,110,.05);border-left:3px solid var(--ac);}
+.ilbl{font-family:var(--mo);font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px;}
+.ior{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mo);font-size:.76rem;margin-bottom:6px;}
+.igo{color:var(--er);}.iex{color:var(--ac2);}.ilb{color:var(--tx3);margin-right:3px;}
+.actbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+
+/* ADAPTIVE */
+.adapt-hdr{background:var(--cd);border:1px solid var(--b);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.adapt-left{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.timer-ring{position:relative;width:50px;height:50px;flex-shrink:0;}
+.timer-ring svg{transform:rotate(-90deg);}
+.tr-bg{stroke:var(--b);stroke-width:4;fill:none;}
+.tr-fg{stroke:var(--ok);stroke-width:4;fill:none;stroke-dasharray:132;stroke-dashoffset:0;transition:stroke-dashoffset .9s linear,stroke .4s;}
+.tcenter{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mo);font-size:.85rem;font-weight:500;}
+.astat{text-align:center;}
+.asv{font-family:var(--mo);font-size:1.1rem;font-weight:500;display:block;}
+.asl{font-family:var(--mo);font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);}
+.adapt-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.a-level-badge{font-family:var(--mo);font-size:.74rem;padding:4px 12px;border-radius:6px;border:1px solid;font-weight:500;}
+.a-level-badge.easy{border-color:rgba(110,200,153,.4);background:rgba(110,200,153,.1);color:var(--ok);}
+.a-level-badge.medium{border-color:rgba(200,169,110,.4);background:rgba(200,169,110,.1);color:var(--ac);}
+.a-level-badge.hard{border-color:rgba(224,112,112,.4);background:rgba(224,112,112,.1);color:var(--er);}
+.skill-meter{display:flex;align-items:center;gap:8px;min-width:200px;}
+.skill-lbl{font-family:var(--mo);font-size:.62rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+.skill-bar{flex:1;height:5px;background:var(--b);border-radius:3px;overflow:hidden;position:relative;}
+.skill-zones{position:absolute;inset:0;display:flex;}
+.sz-easy{flex:0 0 40%;background:rgba(110,200,153,.2);}
+.sz-med{flex:0 0 30%;background:rgba(200,169,110,.2);}
+.sz-hard{flex:0 0 30%;background:rgba(224,112,112,.2);}
+.skill-needle{position:absolute;top:0;bottom:0;width:3px;background:white;border-radius:2px;transition:left .6s ease;box-shadow:0 0 4px rgba(255,255,255,.4);}
+.skill-val{font-family:var(--mo);font-size:.62rem;color:var(--tx2);white-space:nowrap;}
+
+/* DRAG & FILL */
+.drag-code{background:var(--bg);border:1px solid var(--b);border-radius:9px;padding:16px 18px;font-family:var(--mo);font-size:.86rem;line-height:2.4;margin-bottom:16px;}
+.drag-line{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.ctxt{color:#a8b4c8;}
+.dz{display:inline-flex;align-items:center;justify-content:center;min-width:80px;height:26px;padding:0 9px;border:2px dashed var(--b2);border-radius:6px;background:rgba(200,169,110,.04);font-family:var(--mo);font-size:.78rem;color:var(--tx3);cursor:pointer;transition:all .18s;vertical-align:middle;position:relative;user-select:none;}
+.dz.over{border-color:var(--ac);background:rgba(200,169,110,.1);color:var(--ac);}
+.dz.filled{border-color:var(--ac2);border-style:solid;background:rgba(126,184,201,.1);color:var(--ac2);}
+.dz.correct{border-color:var(--ok);border-style:solid;background:rgba(110,200,153,.1);color:var(--ok);}
+.dz.wrong{border-color:var(--er);border-style:solid;background:rgba(224,112,112,.1);color:var(--er);}
+.opts-lbl{font-family:var(--mo);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-bottom:9px;}
+.opts-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+.dchip{padding:6px 13px;border-radius:7px;border:1px solid var(--b2);background:var(--cd);font-family:var(--mo);font-size:.82rem;color:var(--tx);cursor:grab;transition:all .18s;user-select:none;}
+.dchip:hover{border-color:var(--ac);transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.15);}
+.dchip.dragging{opacity:.35;cursor:grabbing;}
+.dchip.used{opacity:.22;cursor:not-allowed;pointer-events:none;}
+
+/* INTERVIEW MODE */
+.iq-card{background:var(--cd);border:1px solid var(--b);border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.iq-head{padding:16px 20px;border-bottom:1px solid var(--b);display:flex;align-items:flex-start;gap:14px;}
+.iq-num{width:36px;height:36px;border-radius:8px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);display:flex;align-items:center;justify-content:center;font-family:var(--mo);font-size:.78rem;color:var(--pu);flex-shrink:0;}
+.iq-meta{flex:1;}
+.iq-title{font-family:var(--sf);font-size:1.1rem;margin-bottom:6px;}
+.iq-body{padding:18px;}
+.iq-prompt{font-size:.87rem;line-height:1.75;color:var(--tx2);margin-bottom:16px;padding:12px 15px;background:var(--bg2);border-radius:7px;border-left:3px solid var(--pu);}
+.iq-constraints{background:var(--bg2);border:1px solid var(--b);border-radius:7px;padding:12px 15px;margin-bottom:16px;font-size:.82rem;color:var(--tx2);}
+.iq-constraints strong{color:var(--tx);display:block;margin-bottom:5px;font-family:var(--mo);font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;}
+.iq-examples{margin-bottom:16px;}
+.iq-ex-title{font-family:var(--mo);font-size:.64rem;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:8px;}
+.iq-ex{background:var(--bg);border:1px solid var(--b);border-radius:7px;padding:10px 14px;font-family:var(--mo);font-size:.8rem;margin-bottom:7px;color:#a8b4c8;}
+.iq-textarea{width:100%;min-height:160px;background:var(--inp);border:1px solid var(--b);border-radius:8px;padding:13px 15px;color:var(--tx);font-family:var(--mo);font-size:.84rem;resize:vertical;outline:none;transition:border-color var(--tr),box-shadow var(--tr);line-height:1.7;}
+.iq-textarea:focus{border-color:var(--pu);box-shadow:0 0 0 3px rgba(167,139,250,.1);}
+.iq-textarea::placeholder{color:var(--tx3);}
+.iq-result{background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:16px 18px;margin-bottom:12px;font-size:.87rem;line-height:1.7;}
+.iq-verdict{font-family:var(--sf);font-size:1rem;margin-bottom:8px;}
+.iq-feedback{color:var(--tx2);}
+.iq-score-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;}
+.iq-sc{background:var(--cd);border:1px solid var(--b);border-radius:8px;padding:8px 14px;font-family:var(--mo);font-size:.76rem;color:var(--tx2);text-align:center;}
+.iq-sc strong{display:block;font-size:1rem;font-weight:500;margin-bottom:1px;}
+.iq-hint-box{background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.2);border-radius:8px;padding:12px 15px;margin-bottom:12px;font-size:.85rem;color:var(--tx2);}
+.iq-hint-box .ilbl{color:var(--pu);}
+
+/* SEPARATE SCORES */
+.sep-score{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.sep-sc{background:var(--cd);border:1px solid var(--b);border-radius:9px;padding:10px 18px;font-family:var(--mo);font-size:.82rem;color:var(--tx2);text-align:center;}
+.sep-sc strong{display:block;font-size:1.3rem;color:var(--ac);font-weight:500;margin-bottom:1px;}
+.sep-sc.ok2 strong{color:var(--ok);}
+.sep-sc.cy strong{color:var(--ac2);}
+.sep-sc.pu strong{color:var(--pu);}
+
+/* DASHBOARD */
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+@media(max-width:600px){.dash-grid{grid-template-columns:1fr 1fr;}}
+.dash-card{background:var(--cd);border:1px solid var(--b);border-radius:11px;padding:18px;text-align:center;}
+.dash-num{font-family:var(--sf);font-size:2rem;font-weight:400;display:block;margin-bottom:3px;}
+.dash-lbl{font-family:var(--mo);font-size:.64rem;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;}
+.topic-table{width:100%;border-collapse:collapse;font-size:.83rem;margin-bottom:20px;}
+.topic-table th{font-family:var(--mo);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);text-align:left;padding:8px 12px;border-bottom:1px solid var(--b);}
+.topic-table td{padding:8px 12px;border-bottom:1px solid var(--b);color:var(--tx2);}
+.topic-table td:first-child{color:var(--tx);font-weight:500;}
+.mode-tab-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.mode-tab{font-family:var(--mo);font-size:.72rem;padding:6px 14px;border-radius:7px;border:1px solid var(--b);background:var(--bg3);color:var(--tx2);cursor:pointer;transition:all var(--tr);}
+.mode-tab.on{border-color:var(--ac);color:var(--ac);background:rgba(200,169,110,.08);}
+
+/* ABOUT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--cd);border:1px solid var(--b);border-radius:16px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;padding:36px;position:relative;animation:pop .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:6px;border:1px solid var(--b);background:var(--bg3);color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all var(--tr);}
+.modal-close:hover{border-color:var(--ac);color:var(--ac);}
+
+/* MISC */
+.loader{display:inline-block;width:13px;height:13px;border:2px solid rgba(200,169,110,.2);border-top-color:var(--ac);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--cd);border:1px solid var(--b2);border-radius:8px;padding:9px 18px;font-size:.8rem;color:var(--tx);z-index:9999;font-family:var(--mo);animation:tin .3s ease;pointer-events:none;}
+@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(9px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.spop{position:fixed;top:22px;right:22px;background:var(--cd);border:1px solid rgba(200,169,110,.4);border-radius:9px;padding:12px 20px;font-family:var(--mo);font-size:1.2rem;color:var(--ac);z-index:9999;animation:pop2 .45s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pop2{from{opacity:0;transform:scale(.5) translateY(-16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.divider{height:1px;background:var(--b);margin:22px 0;}
+@keyframes hmPop{from{opacity:0;stroke-dashoffset:100}to{opacity:1;stroke-dashoffset:0}}
+@media(max-width:600px){.pipe{grid-template-columns:1fr 1fr;}.adapt-hdr{flex-direction:column;align-items:flex-start;}.gen-bar{flex-direction:column;align-items:stretch;}}
+
+@keyframes dhmShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px) rotate(-3deg)}40%{transform:translateX(8px) rotate(3deg)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+
+<!-- ABOUT MODAL -->
+<div class="modal-overlay" id="aboutModal" onclick="if(event.target===this)closeAbout()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAbout()">✕</button>
+    <div style="font-family:var(--sf);font-size:1.5rem;margin-bottom:8px;">About PyQuest</div>
+    <div style="font-family:var(--mo);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ac);margin-bottom:20px;">Interactive Python Learning Platform</div>
+    <p style="font-size:.9rem;line-height:1.8;color:var(--tx2);margin-bottom:16px;">
+      PyQuest is an AI-powered platform designed to help students and professionals at all levels strengthen their Python programming skills through active, hands-on practice. Rather than passive reading or watching tutorials, PyQuest challenges users to complete real Python code — filling in blanks, placing tokens, and solving problems under realistic conditions.
+    </p>
+    <p style="font-size:.9rem;line-height:1.8;color:var(--tx2);margin-bottom:16px;">
+      The platform is built for a wide range of learners: beginners who are just starting with variables and loops, intermediate programmers building confidence with functions and data structures, and advanced students preparing for technical interviews with algorithm and problem-solving challenges.
+    </p>
+    <p style="font-size:.9rem;line-height:1.8;color:var(--tx2);margin-bottom:16px;">
+      Every answer submitted is validated by an intelligent multi-step AI pipeline that runs your code in a secure sandbox, verifies correctness semantically, and provides targeted hints when you are stuck — without ever giving away the answer directly. This ensures that learning happens through effort, not guessing.
+    </p>
+    <p style="font-size:.9rem;line-height:1.8;color:var(--tx2);">
+      PyQuest is purpose-built to make Python practice engaging, measurable, and adaptive — meeting each learner exactly where they are and guiding them steadily toward mastery.
+    </p>
+    <div class="divider"></div>
+    <div style="font-size:.8rem;color:var(--tx3);font-family:var(--mo);">Version 7 · Built with Flask · Powered by Groq / llama-3.1-8b</div>
+  </div>
+</div>
+
+<div class="app">
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo" onclick="ST.uid&&goHome()">Py<span>Quest</span></div>
+  <div class="hdr-r">
+    <button class="hdr-btn" id="homeBtn" onclick="goHome()">Home</button>
+    <button class="hdr-btn gold" id="aboutBtn" onclick="openAbout()">About</button>
+    <button class="hdr-btn" id="dashBtn" onclick="showScreen('dashboard')">Dashboard</button>
+    <button class="hdr-btn" id="switchUserBtn" onclick="switchUser()" style="display:none">⇄ Switch User</button>
+    <div class="user-chip" id="userChip"></div>
+    <div class="score-strip" id="scoreStrip">
+      <div class="sc un" id="hdrUser"></div>
+      <div class="sc">Score<strong id="hdrScore">0</strong></div>
+      <div class="sc">Streak<strong id="hdrStreak">0</strong></div>
+    </div>
+    <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme" style="display:flex!important">&#9681;</button>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="login-wrap">
+    <div class="lhero">
+      <div class="hero-badge"><span class="dot"></span>Level up your Python</div>
+      <h1 class="hero-h">Code. Solve.<br><em>Conquer</em> Python<br>one puzzle at a time.</h1>
+      <p class="hero-p">Earn XP, climb difficulty tiers, and unlock harder challenges. Four game modes from guided fill-in-the-blank practice to adaptive AI challenges and interview preparation.</p>
+      <div class="xp-card">
+        <div class="xp-row"><span class="xp-lbl">Loops — Progress</span><span class="xp-val">6 / 10</span></div>
+        <div class="xp-bar"><div class="xp-fill"></div></div>
+        <div class="xp-tags"><span class="xtag ok">Easy ✓</span><span class="xtag ok">Medium ✓</span><span class="xtag">Hard 🔒</span></div>
+      </div>
+    </div>
+    <div class="lcard">
+      <div class="ltitle" id="cardTitle">Welcome Back</div>
+      <div class="lsub" id="cardSub">Sign in to continue your progress.</div>
+      <div class="tabs">
+        <button class="tab on" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+        <button class="tab" id="tabReg" onclick="switchTab('register')">Create Account</button>
+      </div>
+      <div class="field"><label class="flbl">Username</label><input class="finp" id="uname" type="text" placeholder="Enter username" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')document.getElementById('pwd').focus()"/><div class="ferr" id="nameErr"></div></div>
+      <div class="field"><label class="flbl">Password</label><div class="fwrap"><input class="finp" id="pwd" type="password" placeholder="Minimum 6 characters" autocomplete="new-password" oninput="chkStr(this.value)" onkeydown="if(event.key==='Enter')doAuth()"/><button class="ptog" onclick="togPwd()" type="button" id="ptogBtn">show</button></div><div id="strWrap" style="display:none"><div class="sbar"><div class="sfill" id="sfill"></div></div><div class="slbl" id="slbl"></div></div><div class="ferr" id="passErr"></div></div>
+      <button class="btn btn-p" onclick="doAuth()" id="authBtn"><span id="authTxt">Sign In</span></button>
+      <div class="ferr" style="text-align:center;margin-top:8px" id="authErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="screen-home">
+  <h2 class="pg-title">Choose Your Mode</h2>
+  <p class="pg-sub">Select how you want to practice Python today.</p>
+  <div class="mode-grid">
+    <div class="mode-card" style="--mc:var(--ac)" onclick="showScreen('setup')">
+      <span class="mode-icon">{ }</span>
+      <div class="mode-title">Classic Mode</div>
+      <div class="mode-desc">Select topic and difficulty. Fill in the blanks in real Python code. AI pipeline validates with sandbox and semantic verification.</div>
+      <div class="mode-tag" style="background:rgba(200,169,110,.1);border-color:rgba(200,169,110,.3);color:var(--ac)">Guided Practice</div>
+    </div>
+    <div class="mode-card" style="--mc:var(--ac2)" onclick="showScreen('adaptive-setup')">
+      <span class="mode-icon">⚡</span>
+      <div class="mode-title">Adaptive Mode</div>
+      <div class="mode-desc">AI dynamically adjusts difficulty based on your accuracy and speed. Score-driven engine with a timer. Hints available.</div>
+      <div class="mode-tag" style="background:rgba(126,184,201,.1);border-color:rgba(126,184,201,.3);color:var(--ac2)">Smart AI</div>
+    </div>
+    <div class="mode-card" style="--mc:var(--ok)" onclick="showScreen('drag-setup')">
+      <span class="mode-icon">⇄</span>
+      <div class="mode-title">Drag &amp; Fill</div>
+      <div class="mode-desc">Drag tokens into code blanks. 5 lives — lose one per wrong drop and the gallows fills up! Easy=2 blanks, Medium=4, Hard=6. Full score on win, no score on hangman death.</div>
+      <div class="mode-tag" style="background:rgba(110,200,153,.1);border-color:rgba(110,200,153,.3);color:var(--ok)">Hangman Lives</div>
+    </div>
+    <div class="mode-card" style="--mc:var(--pu)" onclick="showScreen('interview-setup')">
+      <span class="mode-icon">🎯</span>
+      <div class="mode-title">Interview Questions</div>
+      <div class="mode-desc">LeetCode-style Python challenges. Write your solution, receive detailed AI feedback on correctness, time complexity, and edge cases. Hints available.</div>
+      <div class="mode-tag" style="background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.3);color:var(--pu)">Interview Prep</div>
+    </div>
+  </div>
+</div>
+
+<!-- CLASSIC SETUP -->
+<div class="screen" id="screen-setup">
+  <div class="esc-bar"><button class="esc-btn" onclick="goHome()">Back to Modes</button><span class="esc-title">Classic Mode</span></div>
+  <div class="step-lbl"><span>Step 1</span>Select Difficulty</div>
+  <div class="diff-grid">
+    <div class="dc" data-v="easy" onclick="selDiff(this,'c')"><div class="dn">Foundational</div><div class="dd">Core Python concept.</div><span class="db be">Easy</span></div>
+    <div class="dc" data-v="medium" onclick="selDiff(this,'c')"><div class="dn">Intermediate</div><div class="dd">Compound logic.</div><span class="db bm">Medium</span></div>
+    <div class="dc" data-v="hard" onclick="selDiff(this,'c')"><div class="dn">Advanced</div><div class="dd">Full synthesis.</div><span class="db bh">Hard</span></div>
+  </div>
+  <div class="step-lbl"><span>Step 2</span>Select Topic</div>
+  <div class="tgrid" id="tgrid"></div>
+  <div class="sub-panel" id="subPanel"><div class="sub-title" id="subTitle">Subtopics</div><div class="sub-grid" id="subGrid"></div></div>
+  <div class="gen-bar"><div class="gsum" id="gsum">Choose difficulty, topic and subtopic to continue.</div><button class="btn btn-p" id="genBtn" onclick="genClassic()" disabled style="width:auto;padding:10px 26px"><span id="genTxt">Generate Puzzle</span></button></div>
+</div>
+
+<!-- ADAPTIVE SETUP -->
+<div class="screen" id="screen-adaptive-setup">
+  <div class="esc-bar"><button class="esc-btn" onclick="goHome()">Back to Modes</button><span class="esc-title">Adaptive Mode</span></div>
+  <h2 class="pg-title">Adaptive Mode</h2>
+  <p class="pg-sub">Choose a starting topic. The AI engine dynamically adjusts difficulty based on your accuracy and speed. Hints are available at a score penalty.</p>
+  <div class="step-lbl"><span>Step 1</span>Pick a Starting Topic</div>
+  <div class="tgrid" id="adaptTopicGrid"></div>
+  <div style="margin-top:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+    <button class="btn btn-p" id="adaptStartBtn" onclick="startAdaptive()" disabled style="width:auto;padding:10px 28px">Start Adaptive Session</button>
+  </div>
+</div>
+
+<!-- DRAG SETUP -->
+<div class="screen" id="screen-drag-setup">
+  <div class="esc-bar"><button class="esc-btn" onclick="goHome()">Back to Modes</button><span class="esc-title">Drag and Fill</span></div>
+  <h2 class="pg-title">Drag and Fill</h2>
+  <p class="pg-sub">Select difficulty and topic. Drag answer tokens into the correct blanks in the code snippet.</p>
+  <div class="step-lbl"><span>Step 1</span>Select Difficulty</div>
+  <div class="diff-grid">
+    <div class="dc" data-v="easy" onclick="selDiff(this,'d')"><div class="dn">Foundational</div><div class="dd">2 blanks · 8 answer options · 5 lives</div><span class="db be">Easy</span></div>
+    <div class="dc" data-v="medium" onclick="selDiff(this,'d')"><div class="dn">Intermediate</div><div class="dd">4 blanks · 12 answer options · 5 lives</div><span class="db bm">Medium</span></div>
+    <div class="dc" data-v="hard" onclick="selDiff(this,'d')"><div class="dn">Advanced</div><div class="dd">6 blanks · 20 answer options · 5 lives</div><span class="db bh">Hard</span></div>
+  </div>
+  <div class="step-lbl"><span>Step 2</span>Select Topic</div>
+  <div class="tgrid" id="dragTgrid"></div>
+  <div class="sub-panel" id="dragSubPanel"><div class="sub-title" id="dragSubTitle">Subtopics</div><div class="sub-grid" id="dragSubGrid"></div></div>
+  <div class="gen-bar"><div class="gsum" id="dragGsum">Choose difficulty, topic and subtopic.</div><button class="btn btn-p" id="dragGenBtn" onclick="genDrag()" disabled style="width:auto;padding:10px 26px"><span id="dragGenTxt">Generate Puzzle</span></button></div>
+</div>
+
+<!-- INTERVIEW SETUP -->
+<div class="screen" id="screen-interview-setup">
+  <div class="esc-bar"><button class="esc-btn" onclick="goHome()">Back to Modes</button><span class="esc-title">Interview Questions</span></div>
+  <h2 class="pg-title">Interview Questions</h2>
+  <p class="pg-sub">LeetCode-style Python challenges. Write a complete solution and receive detailed AI feedback on correctness, approach, and complexity.</p>
+  <div class="step-lbl"><span>Step 1</span>Select Difficulty</div>
+  <div class="diff-grid" style="grid-template-columns:repeat(3,1fr);max-width:600px;">
+    <div class="dc" data-v="easy" onclick="selIQDiff(this)"><div class="dn">Beginner</div><div class="dd">Simple algorithms, basic Python patterns.</div><span class="db be">Easy</span></div>
+    <div class="dc" data-v="medium" onclick="selIQDiff(this)"><div class="dn">Intermediate</div><div class="dd">Classic LeetCode medium level challenges.</div><span class="db bm">Medium</span></div>
+    <div class="dc" data-v="hard" onclick="selIQDiff(this)"><div class="dn">Advanced</div><div class="dd">Complex algorithms, optimized solutions required.</div><span class="db bh">Hard</span></div>
+  </div>
+  <div class="step-lbl"><span>Step 2</span>Select Category</div>
+  <div class="tgrid" id="iqCatGrid"></div>
+  <div style="margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+    <button class="btn btn-p" id="iqStartBtn" onclick="genInterview()" disabled style="width:auto;padding:10px 28px"><span id="iqStartTxt">Generate Question</span></button>
+  </div>
+</div>
+
+<!-- CLASSIC PUZZLE -->
+<div class="screen" id="screen-puzzle">
+  <div class="esc-bar"><button class="esc-btn" onclick="changeTopic()">Change Topic</button><button class="esc-btn" style="margin-left:auto" onclick="goHome()">All Modes</button></div>
+  <div class="pipe">
+    <div class="ps" id="ps1"><span class="pl">Agent 1</span><span class="pn">Generator</span></div>
+    <div class="ps" id="ps2"><span class="pl">Agent 2</span><span class="pn">Sandbox</span></div>
+    <div class="ps" id="ps3"><span class="pl">Agent 3</span><span class="pn">LLM Verify</span></div>
+    <div class="ps" id="ps4"><span class="pl">Agent 4</span><span class="pn">Hint −10</span></div>
+  </div>
+  <div class="pcard">
+    <div class="phead"><div><div class="pmeta" id="pmeta"></div><div class="ptitle" id="ptitle"></div></div></div>
+    <div class="pbody">
+      <div class="pstmt" id="pstmt"></div>
+      <div class="code" id="pcode"></div>
+      <div class="blbl" id="blbl"></div>
+      <div id="binputs"></div>
+    </div>
+    <div class="pfoot">
+      <button class="btn btn-p" id="subBtn" onclick="submitAns()" style="width:auto;padding:10px 24px">Submit Answer</button>
+    </div>
+  </div>
+  <div id="resArea" style="display:none">
+    <div class="rbanner" id="rbanner"><div class="rdot"></div><div><div class="rtitle" id="rtitle"></div><div class="rsub" id="rsub"></div></div></div>
+    <div class="ibox sb" id="sbBox" style="display:none"><div class="ilbl">Sandbox Analysis</div><div class="ior"><span><span class="ilb">Got:</span><span class="igo" id="sbGot"></span></span><span><span class="ilb">Expected:</span><span class="iex" id="sbExp"></span></span></div><div id="sbExpl" style="color:var(--tx2);font-size:.82rem;"></div></div>
+    <div class="ibox" id="llmBox" style="display:none"><div class="ilbl">AI Verdict</div><div id="llmV" style="color:var(--tx2)"></div></div>
+    <div class="ibox hnt" id="hintBox" style="display:none"><div class="ilbl">Hint — Agent 4 (−10 pts deducted)</div><div id="hintTxt" style="color:var(--tx2)"></div></div>
+    <div class="actbar">
+      <button class="btn btn-o" id="hintBtn" onclick="getHint()">Get Hint (−10 pts)</button>
+      <button class="btn btn-g" id="tryBtn" onclick="tryAgain()">Try Again</button>
+      <button class="btn btn-g" id="nextBtn" onclick="nextPuzzle()" style="display:none">Next Puzzle</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADAPTIVE PUZZLE -->
+<div class="screen" id="screen-adaptive">
+  <div class="esc-bar"><button class="esc-btn" onclick="endAdaptive()">End Session</button><span class="esc-title">Adaptive Mode</span></div>
+  <div class="sep-score">
+    <div class="sep-sc"><strong id="aScore">0</strong>Adaptive Score</div>
+    <div class="sep-sc ok2"><strong id="aStreak">0</strong>Streak</div>
+    <div class="sep-sc cy"><strong id="aQ">0</strong>Questions</div>
+    <div class="sep-sc"><strong id="aSkillPts">300</strong>Skill Score</div>
+  </div>
+  <div class="adapt-hdr">
+    <div class="adapt-left">
+      <div class="timer-ring">
+        <svg viewBox="0 0 48 48" width="50" height="50">
+          <circle class="tr-bg" cx="24" cy="24" r="21"/>
+          <circle class="tr-fg" id="timerRing" cx="24" cy="24" r="21"/>
+        </svg>
+        <div class="tcenter" id="timerNum">120</div>
+      </div>
+      <div class="astat"><span class="asv" id="aQnum" style="color:var(--ac2)">1</span><span class="asl">Q</span></div>
+      <div class="astat"><span class="asv" id="aAccuracy" style="color:var(--ok)">—</span><span class="asl">Accuracy</span></div>
+    </div>
+    <div class="adapt-right">
+      <div class="a-level-badge easy" id="aLevelBadge">Easy</div>
+      <div class="skill-meter">
+        <span class="skill-lbl">Skill</span>
+        <div class="skill-bar">
+          <div class="skill-zones"><div class="sz-easy"></div><div class="sz-med"></div><div class="sz-hard"></div></div>
+          <div class="skill-needle" id="skillNeedle" style="left:30%"></div>
+        </div>
+        <span class="skill-val" id="skillValTxt">300</span>
+      </div>
+    </div>
+  </div>
+  <div class="pcard">
+    <div class="pbody">
+      <div class="pstmt" id="aPstmt"></div>
+      <div class="code" id="aPcode"></div>
+      <div class="blbl" id="aBlbl"></div>
+      <div id="aBinputs"></div>
+    </div>
+    <div class="pfoot">
+      <button class="btn btn-p" id="aSubBtn" onclick="submitAdaptive()" style="width:auto;padding:10px 24px">Submit Answer</button>
+      <button class="btn btn-g" id="aNewPuzzleBtn" onclick="loadAdaptiveQ()" style="width:auto;display:none">🔄 New Puzzle</button>
+    </div>
+  </div>
+  <div id="aResArea" style="display:none">
+    <div class="rbanner" id="aRbanner"><div class="rdot"></div><div><div class="rtitle" id="aRtitle"></div><div class="rsub" id="aRsub"></div></div></div>
+    <div class="ibox hnt" id="aHintBox" style="display:none"><div class="ilbl">Hint (−10 pts deducted)</div><div id="aHintTxt" style="color:var(--tx2)"></div></div>
+    <div class="actbar" style="margin-top:12px">
+      <button class="btn btn-o" id="aHintBtn" onclick="getAdaptHint()">Get Hint (−10 pts)</button>
+      <button class="btn btn-g" id="aNextBtn" onclick="nextAdaptive()">Next Question →</button>
+      <button class="btn btn-o" onclick="endAdaptive()">End Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAG PUZZLE -->
+<div class="screen" id="screen-drag">
+  <div class="esc-bar"><button class="esc-btn" onclick="showScreen('drag-setup',true)">Change Topic</button><button class="esc-btn" style="margin-left:auto" onclick="goHome()">All Modes</button></div>
+  <div class="sep-score">
+    <div class="sep-sc"><strong id="dragScore">0</strong>Score</div>
+    <div class="sep-sc ok2"><strong id="dragStreak">0</strong>Wins</div>
+    <div class="sep-sc cy"><strong id="dragTotal">0</strong>Played</div>
+  </div>
+
+  <!-- Hangman gallows + lives row -->
+  <div style="display:flex;gap:18px;margin-bottom:16px;align-items:flex-start;flex-wrap:wrap;">
+    <div class="hm-gallows-wrap">
+      <svg id="dragHmSvg" viewBox="0 0 140 180" width="130" height="165" xmlns="http://www.w3.org/2000/svg">
+        <line x1="20" y1="170" x2="120" y2="170" stroke="var(--b2)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="50" y1="170" x2="50" y2="10" stroke="var(--b2)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="50" y1="10" x2="95" y2="10" stroke="var(--b2)" stroke-width="4" stroke-linecap="round"/>
+        <line x1="95" y1="10" x2="95" y2="30" stroke="var(--b2)" stroke-width="4" stroke-linecap="round"/>
+        <!-- Rope -->
+        <line id="dhm-rope" x1="95" y1="30" x2="95" y2="30" stroke="var(--b2)" stroke-width="2" stroke-dasharray="3,3" style="display:none"/>
+        <!-- Man parts -->
+        <circle id="dhm-head" cx="95" cy="42" r="12" fill="none" stroke="var(--er)" stroke-width="3" style="display:none"/>
+        <line id="dhm-body" x1="95" y1="54" x2="95" y2="100" stroke="var(--er)" stroke-width="3" stroke-linecap="round" style="display:none"/>
+        <line id="dhm-larm" x1="95" y1="65" x2="72" y2="88" stroke="var(--er)" stroke-width="3" stroke-linecap="round" style="display:none"/>
+        <line id="dhm-rarm" x1="95" y1="65" x2="118" y2="88" stroke="var(--er)" stroke-width="3" stroke-linecap="round" style="display:none"/>
+        <line id="dhm-lleg" x1="95" y1="100" x2="72" y2="130" stroke="var(--er)" stroke-width="3" stroke-linecap="round" style="display:none"/>
+        <line id="dhm-rleg" x1="95" y1="100" x2="118" y2="130" stroke="var(--er)" stroke-width="3" stroke-linecap="round" style="display:none"/>
+        <!-- Face on death -->
+        <line id="dhm-f1" x1="88" y1="37" x2="92" y2="41" stroke="var(--er)" stroke-width="2.5" stroke-linecap="round" style="display:none"/>
+        <line id="dhm-f2" x1="92" y1="37" x2="88" y2="41" stroke="var(--er)" stroke-width="2.5" stroke-linecap="round" style="display:none"/>
+        <line id="dhm-f3" x1="98" y1="37" x2="102" y2="41" stroke="var(--er)" stroke-width="2.5" stroke-linecap="round" style="display:none"/>
+        <line id="dhm-f4" x1="102" y1="37" x2="98" y2="41" stroke="var(--er)" stroke-width="2.5" stroke-linecap="round" style="display:none"/>
+        <path id="dhm-mouth" d="M 88 49 Q 95 45 102 49" fill="none" stroke="var(--er)" stroke-width="2" stroke-linecap="round" style="display:none"/>
+      </svg>
+    </div>
+    <div style="flex:1;min-width:200px;">
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
+        <div class="pmeta" id="dragMeta"></div>
+        <div class="chbtn" onclick="genDrag()" style="cursor:pointer;font-size:.72rem;padding:3px 10px">New Puzzle</div>
+      </div>
+      <div style="font-family:var(--mo);font-size:.7rem;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em">Lives remaining</div>
+      <div style="display:flex;gap:5px;margin-bottom:10px;" id="dragHearts"></div>
+      <div style="font-family:var(--mo);font-size:.7rem;color:var(--tx3);margin-bottom:4px;">Wrong drops:</div>
+      <div id="dragWrongList" style="display:flex;gap:5px;flex-wrap:wrap;min-height:20px;"></div>
+      <div class="ptitle" id="dragTitle" style="font-family:var(--sf);font-size:.95rem;margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <div class="pstmt" id="dragStmt" style="font-size:.86rem;color:var(--tx2);line-height:1.7;margin-bottom:14px;padding:11px 14px;background:var(--bg2);border-radius:7px;border-left:3px solid var(--ok);"></div>
+  <div class="drag-code" id="dragCodeBlock"></div>
+  <div class="opts-lbl">Answer Options — drag to the correct blank (wrong drop = lose a life!)</div>
+  <div class="opts-grid" id="optionsTray"></div>
+  <div id="dragResArea" style="display:none;margin-top:14px">
+    <div class="rbanner" id="dragBanner"><div class="rdot"></div><div><div class="rtitle" id="dragRTitle"></div><div class="rsub" id="dragRSub"></div></div></div>
+    <div class="actbar" style="margin-top:10px">
+      <button class="btn btn-g" onclick="genDrag()">Next Puzzle →</button>
+      <button class="btn btn-o" onclick="goHome()">All Modes</button>
+    </div>
+  </div>
+</div>
+
+<!-- INTERVIEW PUZZLE -->
+<div class="screen" id="screen-interview">
+  <div class="esc-bar"><button class="esc-btn" onclick="showScreen('interview-setup',true)">Change Category</button><button class="esc-btn" style="margin-left:auto" onclick="goHome()">All Modes</button></div>
+  <div class="sep-score">
+    <div class="sep-sc pu"><strong id="iqScore">0</strong>Interview Score</div>
+    <div class="sep-sc ok2"><strong id="iqSolved">0</strong>Solved</div>
+    <div class="sep-sc cy"><strong id="iqAttempts">0</strong>Attempts</div>
+  </div>
+  <div class="iq-card">
+    <div class="iq-head">
+      <div class="iq-num" id="iqNum">Q1</div>
+      <div class="iq-meta">
+        <div class="pmeta" id="iqMeta"></div>
+        <div class="iq-title" id="iqTitle"></div>
+      </div>
+    </div>
+    <div class="iq-body">
+      <div class="iq-prompt" id="iqPrompt"></div>
+      <div class="iq-examples">
+        <div class="iq-ex-title">Examples — use these to verify your solution</div>
+        <div id="iqExamples"></div>
+      </div>
+      <div class="iq-constraints" id="iqConstraints" style="display:none">
+        <strong>Constraints</strong>
+        <div id="iqConstraintsList"></div>
+      </div>
+      <div class="blbl" style="margin-bottom:8px">Your Python Solution</div>
+      <textarea class="iq-textarea" id="iqAnswer" placeholder="def solution(...):&#10;    # write your solution here&#10;    pass"></textarea>
+    </div>
+    <div class="pfoot">
+      <button class="btn btn-p" id="iqSubBtn" onclick="submitInterview()" style="width:auto;padding:10px 24px;background:var(--pu);border-color:var(--pu);color:white">Submit Solution</button>
+      <button class="btn btn-g" onclick="genInterview()" style="width:auto">New Question</button>
+      <button class="btn btn-pu" id="iqHintBtn" onclick="getIQHint()">Get Hint (−10 pts)</button>
+    </div>
+  </div>
+  <div id="iqResArea" style="display:none">
+    <div class="iq-result" id="iqResult">
+      <div class="iq-verdict" id="iqVerdict"></div>
+      <div class="iq-feedback" id="iqFeedback"></div>
+      <div class="iq-score-row" id="iqScoreRow"></div>
+    </div>
+    <div class="iq-hint-box" id="iqHintBox" style="display:none">
+      <div class="ilbl" style="color:var(--pu);margin-bottom:6px">Hint (−10 pts deducted)</div>
+      <div id="iqHintTxt" style="color:var(--tx2);font-size:.85rem;"></div>
+    </div>
+    <div class="actbar">
+      <button class="btn btn-g" onclick="iqTryAgain()">Edit &amp; Try Again</button>
+      <button class="btn btn-g" onclick="genInterview()">Next Question</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- DASHBOARD -->
+<div class="screen" id="screen-dashboard">
+  <div class="esc-bar"><button class="esc-btn" onclick="goHome()">Back to Home</button><span class="esc-title">Performance Dashboard</span></div>
+  <h2 class="pg-title">Your Performance</h2>
+  <p class="pg-sub">Track your progress across all four game modes.</p>
+  <div class="mode-tab-row">
+    <button class="mode-tab on" onclick="showDashTab('classic',this)">Classic</button>
+    <button class="mode-tab" onclick="showDashTab('adaptive',this)">Adaptive</button>
+    <button class="mode-tab" onclick="showDashTab('drag',this)">Drag & Fill</button>
+    <button class="mode-tab" onclick="showDashTab('interview',this)">Interview</button>
+  </div>
+  <div id="dashContent"></div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+/* ══ CANVAS ══ */
+(function(){
+  const cv=document.getElementById('bgCanvas'),cx=cv.getContext('2d');
+  const TK=['def','for','if','else','while','return','class','True','False','None','print()','len()','range()','str','int','list','dict','bool','+=','=>','->','==','!=','**','try','except','with','lambda','[ ]','{ }','( )'];
+  let W,H,pts=[];
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  function mk(){return{x:Math.random()*W,y:Math.random()*H,t:TK[Math.floor(Math.random()*TK.length)],sz:11+Math.random()*8,sp:.08+Math.random()*.32,dr:(Math.random()-.5)*.06,a:.02+Math.random()*.12,fd:Math.random()>.5?1:-1,fs:.0007+Math.random()*.0025};}
+  for(let i=0;i<60;i++)pts.push(mk());
+  function draw(){
+    cx.clearRect(0,0,W,H);
+    const dk=document.documentElement.getAttribute('data-theme')!=='light';
+    pts.forEach(p=>{
+      p.y-=p.sp;p.x+=p.dr;p.a+=p.fs*p.fd;
+      if(p.a>.14)p.fd=-1;if(p.a<.015)p.fd=1;
+      if(p.y<-25){p.y=H+8;p.x=Math.random()*W;}
+      if(p.x<-60||p.x>W+60)p.x=Math.random()*W;
+      cx.font=`500 ${p.sz}px "DM Mono",monospace`;
+      cx.fillStyle=dk?`rgba(200,169,110,${p.a.toFixed(3)})`:`rgba(60,50,30,${p.a.toFixed(3)})`;
+      cx.fillText(p.t,p.x,p.y);
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══ TOPICS ══ */
+const TOPICS=[
+  {id:1,n:"Variables and Identifiers",s:["Variable declaration and assignment","Rules for naming identifiers","Multiple variable assignment","Global variables","Local variables","Variable reassignment","Deleting variables (del)","Variable scope","Checking variable type (type())","Dynamic typing in Python"]},
+  {id:2,n:"Data Types",s:["Integer (int)","Floating-point numbers (float)","Strings (str)","Boolean (bool)","Complex numbers","Type conversion","Mutable vs immutable types","None type","Type checking (isinstance())","Data type casting"]},
+  {id:3,n:"Input and Output",s:["Using print()","Using input()","Printing multiple values","Formatted output using f-strings","Escape characters","Output formatting","Separator in print()","End parameter in print()","Converting user input","Reading numeric input"]},
+  {id:4,n:"Operators",s:["Arithmetic operators","Comparison operators","Logical operators","Assignment operators","Modulus operator (%)","Exponent operator (**)","Membership operators","Identity operators","Operator precedence","Bitwise operators"]},
+  {id:5,n:"Conditional Statements",s:["Basic if statement","if-else condition","if-elif-else ladder","Nested conditionals","Boolean expressions","Logical condition evaluation","Ternary expression","Combining conditions","Comparison chaining","Decision-making logic"]},
+  {id:6,n:"Loops and Iteration",s:["for loop","while loop","range() function","break statement","continue statement","pass statement","Nested loops","Iterating over sequences","Loop with else clause","Infinite loops"]},
+  {id:7,n:"String Manipulation",s:["String creation","String indexing","String slicing","String concatenation","String repetition","upper() and lower()","find() and count()","replace()","split() and join()","String formatting"]},
+  {id:8,n:"Lists",s:["Creating lists","List indexing","List slicing","append() and extend()","remove() and pop()","Iterating lists","Nested lists","sort() and reverse()","List comprehension","Copying lists"]},
+  {id:9,n:"Tuples",s:["Creating tuples","Tuple indexing","Tuple slicing","Tuple unpacking","Tuple immutability","Converting to list","Tuple iteration","count() and index()","Nested tuples","Packing and unpacking"]},
+  {id:10,n:"Sets",s:["Creating sets","add()","remove() and discard()","Set union","Set intersection","Set difference","Membership testing","Eliminating duplicates","Iterating sets","Frozen sets"]},
+  {id:11,n:"Dictionaries",s:["Creating dictionaries","Accessing by key","Adding key-value pairs","Updating values","Removing elements","keys() and values()","Iterating dictionaries","Nested dictionaries","Dict comprehension","Checking key existence"]},
+  {id:12,n:"Functions",s:["Defining functions","Calling functions","Parameters","Return values","Default arguments","Keyword arguments","*args and **kwargs","Lambda functions","Recursive functions","Function scope"]},
+  {id:13,n:"Exception Handling",s:["try block","except block","Multiple exceptions","finally clause","else clause","raise statement","Custom exceptions","Runtime errors","Debugging strategies","Common exception types"]},
+  {id:14,n:"File Handling",s:["open()","read() and readline()","write()","File modes","Closing files","with statement","Line by line reading","Writing structured data","File errors","Text files"]},
+  {id:15,n:"Object-Oriented Programming",s:["Classes and objects","__init__ constructor","Instance variables","Methods","Inheritance","Method overriding","Encapsulation","Polymorphism","Class vs instance attrs","Object lifecycle"]},
+];
+
+/* Interview categories */
+const IQ_CATS=[
+  {id:'arrays',n:'Arrays & Lists',icon:'[ ]'},
+  {id:'strings',n:'Strings',icon:'"..."'},
+  {id:'hashmaps',n:'Hash Maps & Sets',icon:'{ }'},
+  {id:'twopointers',n:'Two Pointers',icon:'↔'},
+  {id:'sliding',n:'Sliding Window',icon:'▦'},
+  {id:'recursion',n:'Recursion & Backtracking',icon:'↩'},
+  {id:'dp',n:'Dynamic Programming',icon:'⊞'},
+  {id:'trees',n:'Trees & Graphs',icon:'⋱'},
+  {id:'sorting',n:'Sorting & Searching',icon:'⇅'},
+  {id:'math',n:'Math & Logic',icon:'∑'},
+];
+
+/* ══ STATE ══ */
+const ST={
+  uid:null,uname:null,score:0,streak:0,
+  diff:null,tid:null,tname:null,sub:null,qid:null,nb:1,authMode:'login',
+  adaptTid:null,adaptTname:null,adaptScore:0,adaptStreak:0,adaptQ:0,
+  adaptSkill:300,adaptCorrect:0,adaptTotal:0,adaptQid:null,adaptNb:1,
+  adaptTimerH:null,adaptTimeLeft:120,adaptTimeMax:120,adaptTimedOut:false,
+  // NEW: consecutive correct counter for adaptive (hidden from UI)
+  adaptConsecCorrect:0,
+  dragDiff:null,dragTid:null,dragTname:null,dragSub:null,
+  dragScore:0,dragStreak:0,dragTotal:0,dragCorrects:[],dragQid:null,
+  iqCat:null,iqDiff:'medium',iqLastQ:null,iqScore:0,iqSolved:0,iqAttempts:0,iqQid:null,iqLastAnswer:'',
+};
+let prog={};
+let draggedChip=null;
+
+/* ══ ADAPTIVE DIFFICULTY THRESHOLDS ══ */
+// Requires 4 consecutive correct to reach Medium, 6 consecutive correct to reach Hard
+// These are ADDITIVE guards on top of the skill score system
+// Skill score alone can't cross thresholds without the consecutive requirement
+const ADAPT_CONSEC_TO_MEDIUM = 4;   // need 4 in a row to unlock Medium (hidden)
+const ADAPT_CONSEC_TO_HARD   = 6;   // need 6 in a row to unlock Hard (hidden)
+
+function skillToDiff(skill){
+  // Consecutive gate: if not enough consecutive corrects, cap at lower difficulty
+  if(skill>=700&&ST.adaptConsecCorrect>=ADAPT_CONSEC_TO_HARD)return'hard';
+  if(skill>=400&&ST.adaptConsecCorrect>=ADAPT_CONSEC_TO_MEDIUM)return'medium';
+  return'easy';
+}
+function diffToTime(d){return{easy:120,medium:90,hard:60}[d]||120;}
+function skillToNeedle(s){return Math.min(95,Math.max(3,(s/1000)*100))+'%';}
+
+/* ══ THEME ══ */
+function toggleTheme(){const t=document.documentElement.getAttribute('data-theme'),n=t==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('pq-theme',n);}
+(()=>{const s=localStorage.getItem('pq-theme');if(s)document.documentElement.setAttribute('data-theme',s);})();
+
+/* ══ HEADER ══ */
+function updateHdrFor(scr){
+  const onLogin=scr==='login';
+  const onHome=scr==='home';
+  const inGame=scr==='puzzle'||scr==='adaptive'||scr==='drag'||scr==='interview';
+  const logged=ST.uid!=null;
+  // Show score strip only in game screens, NOT on home or dashboard
+  const showScore=logged&&inGame;
+  document.getElementById('scoreStrip').classList.toggle('show',showScore);
+  document.getElementById('homeBtn').classList.toggle('show',!onLogin&&!onHome&&logged);
+  document.getElementById('aboutBtn').classList.toggle('show',onHome);
+  document.getElementById('dashBtn').classList.toggle('show',onHome);
+  // Switch User button — only on home screen
+  const su=document.getElementById('switchUserBtn');
+  su.style.display=(onHome&&logged)?'flex':'none';
+  const uc=document.getElementById('userChip');
+  uc.classList.toggle('show',onHome&&logged);
+  if(onHome&&logged)uc.textContent='👤 '+ST.uname;
+}
+
+function switchUser(){
+  // Reset all session state and return to login
+  clearAdaptTimer();
+  Object.assign(ST,{uid:null,uname:null,score:0,streak:0,diff:null,tid:null,tname:null,sub:null,qid:null,nb:1,
+    adaptTid:null,adaptTname:null,adaptScore:0,adaptStreak:0,adaptQ:0,adaptSkill:300,adaptCorrect:0,adaptTotal:0,
+    adaptQid:null,adaptNb:1,adaptTimerH:null,adaptTimeLeft:120,adaptTimeMax:120,adaptTimedOut:false,adaptConsecCorrect:0,
+    dragDiff:null,dragTid:null,dragTname:null,dragSub:null,dragScore:0,dragStreak:0,dragTotal:0,dragQid:null,
+    iqCat:null,iqDiff:'medium',iqLastQ:null,iqScore:0,iqSolved:0,iqAttempts:0,iqQid:null,iqLastAnswer:''});
+  prog={};
+  // Clear login fields
+  document.getElementById('uname').value='';
+  document.getElementById('pwd').value='';
+  ['nameErr','passErr','authErr'].forEach(id=>document.getElementById(id).textContent='');
+  document.getElementById('hdrScore').textContent='0';
+  document.getElementById('hdrStreak').textContent='0';
+  showScreen('login',true);
+  toast('Signed out. Login with another account.');
+}
+
+/* ══ SCREENS ══ */
+function showScreen(id,back=false){
+  const old=document.querySelector('.screen.active');
+  if(old)old.classList.remove('active','sback');
+  const nx=document.getElementById('screen-'+id);
+  nx.classList.remove('sback');if(back)nx.classList.add('sback');
+  nx.classList.add('active');
+  updateHdrFor(id);
+  // Auto-load first dashboard tab when opening dashboard — fetch fresh data first
+  if(id==='dashboard'){
+    dashTab='classic';
+    document.querySelectorAll('#screen-dashboard .mode-tab').forEach((b,i)=>{b.classList.toggle('on',i===0);});
+    loadAndRenderDash();
+  }
+}
+function goHome(){clearAdaptTimer();showScreen('home');}
+
+async function loadAndRenderDash(){
+  // Always fetch fresh score + progress from server so returning users see correct data
+  const el=document.getElementById('dashContent');
+  el.innerHTML='<div style="padding:28px;text-align:center;color:var(--tx3);font-family:var(--mo);font-size:.8rem"><span class="loader" style="display:inline-block"></span> Loading...</div>';
+  if(ST.uid){
+    try{
+      const res=await fetch('/api/auth/me',{credentials:'include'});
+      const d=await res.json();
+      if(d.success&&d.data){
+        // Sync score and streak
+        ST.score=d.data.total_score||0;
+        ST.streak=d.data.streak||0;
+        document.getElementById('hdrScore').textContent=ST.score;
+        document.getElementById('hdrStreak').textContent=ST.streak;
+        // Sync topic progress
+        if(d.data.topic_progress){
+          try{prog=JSON.parse(d.data.topic_progress)||{};}catch(e){prog={};}
+          localStorage.setItem('pq-p-'+ST.uid,JSON.stringify(prog));
+        }
+      }
+    }catch(e){
+      // Fallback to localStorage if server unreachable
+      try{const s=localStorage.getItem('pq-p-'+ST.uid);if(s)prog=JSON.parse(s);}catch(e2){}
+    }
+  }
+  renderDash();
+}
+
+/* ══ MODAL ══ */
+function openAbout(){document.getElementById('aboutModal').classList.add('open');}
+function closeAbout(){document.getElementById('aboutModal').classList.remove('open');}
+
+/* ══ TOAST ══ */
+function toast(msg,dur=2800){const e=document.createElement('div');e.className='toast';e.textContent=msg;document.body.appendChild(e);setTimeout(()=>e.remove(),dur);}
+function spop(p,c='var(--ac)'){const e=document.createElement('div');e.className='spop';e.textContent='+'+p+' pts';e.style.color=c;document.body.appendChild(e);setTimeout(()=>e.remove(),2200);}
+
+/* ══ AUTH ══ */
+function togPwd(){const i=document.getElementById('pwd'),b=document.getElementById('ptogBtn');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'show':'hide';}
+function chkStr(v){
+  const w=document.getElementById('strWrap'),f=document.getElementById('sfill'),l=document.getElementById('slbl');
+  if(!v){w.style.display='none';return;}w.style.display='block';
+  let s=0;if(v.length>=6)s++;if(v.length>=10)s++;if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;
+  const lv=[{p:'20%',c:'#e07070',t:'Very weak'},{p:'40%',c:'#e09060',t:'Weak'},{p:'60%',c:'#c8a96e',t:'Fair'},{p:'80%',c:'#8ec87e',t:'Strong'},{p:'100%',c:'#6ec899',t:'Very strong'}];
+  const lx=lv[Math.max(0,s-1)];f.style.width=lx.p;f.style.background=lx.c;l.textContent=lx.t;l.style.color=lx.c;
+}
+function switchTab(m){
+  ST.authMode=m;
+  document.getElementById('tabLogin').classList.toggle('on',m==='login');
+  document.getElementById('tabReg').classList.toggle('on',m==='register');
+  const isL=m==='login';
+  document.getElementById('cardTitle').textContent=isL?'Welcome Back':'Create Account';
+  document.getElementById('cardSub').textContent=isL?'Sign in to continue your progress.':'Choose a username and secure password.';
+  document.getElementById('authTxt').textContent=isL?'Sign In':'Create Account';
+  ['nameErr','passErr','authErr'].forEach(id=>document.getElementById(id).textContent='');
+  ['uname','pwd'].forEach(id=>document.getElementById(id).classList.remove('err'));
+}
+async function doAuth(){
+  document.getElementById('authErr').textContent='';
+  const n=document.getElementById('uname').value.trim(),p=document.getElementById('pwd').value;
+  let ok=true;
+  if(!n||n.length<2){document.getElementById('nameErr').textContent='Min 2 characters.';document.getElementById('uname').classList.add('err');ok=false;}else document.getElementById('uname').classList.remove('err');
+  if(!p||p.length<6){document.getElementById('passErr').textContent='Min 6 characters.';document.getElementById('pwd').classList.add('err');ok=false;}else document.getElementById('pwd').classList.remove('err');
+  if(!ok)return;
+  const btn=document.getElementById('authBtn');btn.disabled=true;document.getElementById('authTxt').innerHTML='<span class="loader"></span>';
+  try{
+    const res=await fetch(ST.authMode==='register'?'/api/auth/register':'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:n,password:p})});
+    const data=await res.json();
+    if(!data.success)throw new Error(data.message||data.error);
+    ST.uid=data.data.id;ST.uname=data.data.username;
+    ST.score=data.data.total_score||0;ST.streak=data.data.streak||0;
+    document.getElementById('hdrUser').textContent=ST.uname;
+    document.getElementById('hdrScore').textContent=ST.score;
+    document.getElementById('hdrStreak').textContent=ST.streak;
+    // Load topic progress from DB response (most authoritative)
+    if(data.data.topic_progress){
+      try{prog=JSON.parse(data.data.topic_progress)||{};}catch(e){prog={};}
+      localStorage.setItem('pq-p-'+ST.uid,JSON.stringify(prog));
+    }else{
+      await loadProg();
+    }
+    buildTGrids();loadModeStats();showScreen('home');
+  }catch(e){document.getElementById('authErr').textContent=e.message||'Authentication failed.';}
+  finally{btn.disabled=false;document.getElementById('authTxt').textContent=ST.authMode==='login'?'Sign In':'Create Account';}
+}
+
+/* ══ PROGRESS ══ */
+function pk(t,d){return ST.uid+'_'+t+'_'+d;}
+
+/* Save/load non-classic mode stats (adaptive, drag, interview) to localStorage */
+function saveModeStats(){
+  if(!ST.uid)return;
+  const stats={
+    adaptScore:ST.adaptScore,adaptStreak:ST.adaptStreak,adaptQ:ST.adaptQ,
+    adaptSkill:ST.adaptSkill,adaptCorrect:ST.adaptCorrect,adaptTotal:ST.adaptTotal,
+    dragScore:ST.dragScore,dragStreak:ST.dragStreak,dragTotal:ST.dragTotal,
+    iqScore:ST.iqScore,iqSolved:ST.iqSolved,iqAttempts:ST.iqAttempts
+  };
+  localStorage.setItem('pq-ms-'+ST.uid,JSON.stringify(stats));
+}
+function loadModeStats(){
+  if(!ST.uid)return;
+  try{
+    const s=localStorage.getItem('pq-ms-'+ST.uid);
+    if(!s)return;
+    const stats=JSON.parse(s);
+    ST.adaptScore=stats.adaptScore||0;ST.adaptStreak=stats.adaptStreak||0;
+    ST.adaptQ=stats.adaptQ||0;ST.adaptSkill=stats.adaptSkill||300;
+    ST.adaptCorrect=stats.adaptCorrect||0;ST.adaptTotal=stats.adaptTotal||0;
+    ST.dragScore=stats.dragScore||0;ST.dragStreak=stats.dragStreak||0;
+    ST.dragTotal=stats.dragTotal||0;
+    ST.iqScore=stats.iqScore||0;ST.iqSolved=stats.iqSolved||0;
+    ST.iqAttempts=stats.iqAttempts||0;
+    // Sync UI elements that show live in game screens
+    document.getElementById('dragScore').textContent=ST.dragScore;
+    document.getElementById('dragStreak').textContent=ST.dragStreak;
+    document.getElementById('dragTotal').textContent=ST.dragTotal;
+    document.getElementById('iqScore').textContent=ST.iqScore;
+    document.getElementById('iqSolved').textContent=ST.iqSolved;
+    document.getElementById('iqAttempts').textContent=ST.iqAttempts;
+  }catch(e){}
+}
+async function loadProg(){
+  // First load from server (authoritative)
+  try{
+    const res=await fetch('/api/auth/me',{credentials:'include'});
+    const d=await res.json();
+    if(d.success&&d.data.topic_progress){
+      try{prog=JSON.parse(d.data.topic_progress)||{};}catch(e){prog={};}
+      // Sync latest score too
+      if(d.data.total_score!==undefined){ST.score=d.data.total_score;document.getElementById('hdrScore').textContent=ST.score;}
+      if(d.data.streak!==undefined){ST.streak=d.data.streak;document.getElementById('hdrStreak').textContent=ST.streak;}
+      localStorage.setItem('pq-p-'+ST.uid,JSON.stringify(prog)); // keep local in sync
+      return;
+    }
+  }catch(e){}
+  // Fallback: localStorage
+  try{const s=localStorage.getItem('pq-p-'+ST.uid);prog=s?JSON.parse(s):{};}catch(e){prog={};}
+}
+function saveProg(){
+  const json=JSON.stringify(prog);
+  localStorage.setItem('pq-p-'+ST.uid,json);
+  // Also persist to server DB (non-blocking)
+  if(ST.uid){
+    fetch('/api/auth/save-progress',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id:ST.uid,progress:json})
+    }).catch(()=>{});
+  }
+}
+function getAns(t,d){return prog[pk(t,d)]||0;}
+function addAns(t,d){const k=pk(t,d);prog[k]=(prog[k]||0)+1;saveProg();}
+function isUnlk(t,d){if(d==='easy')return true;if(d==='medium')return getAns(t,'easy')>=10;if(d==='hard')return getAns(t,'medium')>=10;return false;}
+
+/* ══ TOPIC GRIDS ══ */
+function buildTGrids(){
+  ['tgrid','adaptTopicGrid','dragTgrid'].forEach(gid=>{
+    const g=document.getElementById(gid);g.innerHTML='';
+    TOPICS.forEach(t=>{
+      const c=document.createElement('div');c.className='tc';
+      c.innerHTML=`<div class="tnum">T${t.id}</div><div class="tname">${t.n}</div>`;
+      c.onclick=()=>{
+        g.querySelectorAll('.tc').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+        if(gid==='tgrid'){ST.tid=t.id;ST.tname=t.n;ST.sub=null;buildSubs(t,'c');updSum();updGen();}
+        else if(gid==='adaptTopicGrid'){ST.adaptTid=t.id;ST.adaptTname=t.n;document.getElementById('adaptStartBtn').disabled=false;}
+        else{ST.dragTid=t.id;ST.dragTname=t.n;ST.dragSub=null;buildSubs(t,'d');updDragSum();}
+      };
+      g.appendChild(c);
+    });
+  });
+  // Interview categories
+  const ig=document.getElementById('iqCatGrid');ig.innerHTML='';
+  IQ_CATS.forEach(cat=>{
+    const c=document.createElement('div');c.className='tc';
+    c.innerHTML=`<div class="tnum">${cat.icon}</div><div class="tname">${cat.n}</div>`;
+    c.onclick=()=>{ig.querySelectorAll('.tc').forEach(x=>x.classList.remove('on'));c.classList.add('on');ST.iqCat=cat.id;document.getElementById('iqStartBtn').disabled=!(ST.iqDiff&&ST.iqCat);};
+    ig.appendChild(c);
+  });
+}
+function buildSubs(t,mode){
+  const panel=mode==='d'?document.getElementById('dragSubPanel'):document.getElementById('subPanel');
+  const title=mode==='d'?document.getElementById('dragSubTitle'):document.getElementById('subTitle');
+  const grid=mode==='d'?document.getElementById('dragSubGrid'):document.getElementById('subGrid');
+  title.textContent=t.n+' — Subtopics';grid.innerHTML='';
+  t.s.forEach(s=>{
+    const c=document.createElement('div');c.className='chip';c.textContent=s;
+    c.onclick=()=>{grid.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+      if(mode==='d'){ST.dragSub=s;updDragSum();}else{ST.sub=s;updSum();updGen();}
+    };
+    grid.appendChild(c);
+  });
+  panel.classList.add('open');
+}
+function selDiff(card,mode){
+  card.closest('.diff-grid').querySelectorAll('.dc').forEach(c=>c.classList.remove('se','sm','sh'));
+  const v=card.dataset.v;card.classList.add(v==='easy'?'se':v==='medium'?'sm':'sh');
+  if(mode==='d'){ST.dragDiff=v;updDragSum();}else{ST.diff=v;updSum();updGen();}
+}
+function selIQDiff(card){
+  card.closest('.diff-grid').querySelectorAll('.dc').forEach(c=>c.classList.remove('se','sm','sh'));
+  const v=card.dataset.v;
+  card.classList.add(v==='easy'?'se':v==='medium'?'sm':'sh');
+  ST.iqDiff=v;
+  // Enable start only when both diff and category selected
+  document.getElementById('iqStartBtn').disabled=!(ST.iqDiff&&ST.iqCat);
+}
+function updSum(){
+  const s=document.getElementById('gsum');
+  if(!ST.diff||!ST.tid||!ST.sub){s.innerHTML='Choose difficulty, topic and subtopic to continue.';return;}
+  const unlk=isUnlk(ST.tid,ST.diff),ans=getAns(ST.tid,ST.diff);
+  let note='';
+  if(!unlk){const need=ST.diff==='medium'?'Easy':'Medium',have=ST.diff==='medium'?getAns(ST.tid,'easy'):getAns(ST.tid,'medium');note=` <span style="color:var(--er)">— ${10-have} more ${need} to unlock.</span>`;}
+  else note=` <span style="color:var(--tx3)">— ${ans}/10</span>`;
+  s.innerHTML=`<strong>${ST.diff.charAt(0).toUpperCase()+ST.diff.slice(1)}</strong> · <strong>${ST.tname}</strong> · ${ST.sub}${note}`;
+}
+function updGen(){document.getElementById('genBtn').disabled=!(ST.diff&&ST.tid&&ST.sub&&isUnlk(ST.tid,ST.diff));}
+function updDragSum(){
+  const s=document.getElementById('dragGsum');
+  if(!ST.dragDiff||!ST.dragTid||!ST.dragSub){s.innerHTML='Choose difficulty, topic and subtopic.';document.getElementById('dragGenBtn').disabled=true;return;}
+  s.innerHTML=`<strong>${ST.dragDiff.charAt(0).toUpperCase()+ST.dragDiff.slice(1)}</strong> · <strong>${ST.dragTname}</strong> · ${ST.dragSub}`;
+  document.getElementById('dragGenBtn').disabled=false;
+}
+
+/* ══ CLASSIC ══ */
+async function genClassic(){
+  const btn=document.getElementById('genBtn'),txt=document.getElementById('genTxt');
+  btn.disabled=true;txt.innerHTML='<span class="loader"></span>';setPs('ps1','run');
+  try{
+    const res=await fetch('/api/questions/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:ST.tname+' - '+ST.sub,difficulty:ST.diff})});
+    const d=await res.json();if(!d.success)throw new Error(d.message||d.error);
+    ST.qid=d.data.id;renderPuzzle(d.data);showScreen('puzzle');setPs('ps1','ok');
+  }catch(e){toast('Generation failed: '+(e.message||'Try again'));setPs('ps1','er');}
+  finally{btn.disabled=false;txt.textContent='Generate Puzzle';updGen();}
+}
+function renderPuzzle(q){
+  ST.nb=q.num_blanks||1;
+  const st=q.topic.length>34?q.topic.substring(0,34)+'...':q.topic;
+  const dc=q.difficulty.substring(0,1);
+  document.getElementById('pmeta').innerHTML=`<span class="tag t-tp">${st}</span><span class="tag t-${dc}">${q.difficulty.charAt(0).toUpperCase()+q.difficulty.slice(1)}</span><span class="tag t-b">${ST.nb} blank${ST.nb>1?'s':''}</span>`;
+  document.getElementById('ptitle').textContent=q.title;
+  document.getElementById('pstmt').textContent=q.problem_statement;
+  let code=q.template_code,n=0;
+  if(ST.nb>1){code=code.replace(/______/g,()=>{n++;return`<span class="blank-n">__ ${n} __</span>`;});}
+  else code=code.replace('______','<span class="blank">______</span>');
+  document.getElementById('pcode').innerHTML=code;
+  document.getElementById('blbl').textContent=ST.nb===1?'Your Answer':'Fill in all '+ST.nb+' blanks';
+  buildBInputs(ST.nb,q.template_code,'b','binputs','submitAns()');
+  document.getElementById('resArea').style.display='none';
+  ['sbBox','llmBox','hintBox'].forEach(id=>document.getElementById(id).style.display='none');
+  const hb=document.getElementById('hintBtn');hb.style.display='inline-flex';hb.disabled=false;hb.textContent='Get Hint (−10 pts)';
+  document.getElementById('tryBtn').style.display='inline-flex';document.getElementById('nextBtn').style.display='none';
+  document.getElementById('subBtn').disabled=false;document.getElementById('subBtn').textContent='Submit Answer';
+  setPs('ps2','');setPs('ps3','');setPs('ps4','');
+}
+function buildBInputs(n,tpl,pfx,cid,submitCall){
+  const w=document.getElementById(cid);w.innerHTML='';
+  const lines=(tpl||'').split('\n');
+  for(let i=0;i<n;i++){
+    let ctx='',cnt=0;
+    for(const l of lines){if(l.includes('______')){if(cnt===i){ctx=l.trim();break;}cnt++;}}
+    const row=document.createElement('div');row.className='brow';
+    row.innerHTML=`<span class="btag">${n===1?'Answer':'Blank '+(i+1)}</span>${ctx&&n>1?`<span class="bctx">${ctx.replace('______','?')}</span>`:''}<input class="binp" id="${pfx}${i}" type="text" placeholder="${n===1?'Type your answer...':'Blank '+(i+1)+'...'}"/>`;
+    row.querySelector('input').addEventListener('keydown',e=>{if(e.key==='Enter'){const nx=document.getElementById(pfx+(i+1));if(nx)nx.focus();else eval(submitCall);}});
+    w.appendChild(row);
+  }
+  setTimeout(()=>{const f=document.getElementById(pfx+'0');if(f)f.focus();},90);
+}
+function getAnsStr(pfx,n){const v=[];for(let i=0;i<n;i++){const inp=document.getElementById(pfx+i);v.push(inp?inp.value.trim():'');}return n===1?v[0]:v.join(' ||| ');}
+function clrAns(pfx,n){for(let i=0;i<n;i++){const inp=document.getElementById(pfx+i);if(inp){inp.value='';inp.disabled=false;}}const f=document.getElementById(pfx+'0');if(f)f.focus();}
+function valAns(pfx,n){for(let i=0;i<n;i++){const inp=document.getElementById(pfx+i);if(!inp||!inp.value.trim()){toast('Fill in Blank '+(i+1)+' first.');return false;}}return true;}
+async function submitAns(hint=false){
+  if(!valAns('b',ST.nb))return;
+  const btn=document.getElementById('subBtn');
+  if(btn.disabled)return; // prevent double submit
+  const a=getAnsStr('b',ST.nb);
+  btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+  setPs('ps2','run');setPs('ps3','run');if(hint)setPs('ps4','run');
+  try{
+    const res=await fetch('/api/submissions/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:ST.uid,question_id:ST.qid,answer:a,request_hint:hint})});
+    const d=await res.json();if(!d.success)throw new Error(d.message||d.error);
+    const r=d.data;
+    setPs('ps2',r.sandbox_passed?'ok':'er');setPs('ps3',r.correct?'ok':'er');setPs('ps4',r.hint_used?'ok':'');
+    renderRes(r);
+    ST.score=r.total_score;ST.streak=r.streak;
+    document.getElementById('hdrScore').textContent=ST.score;
+    document.getElementById('hdrStreak').textContent=ST.streak;
+    if(r.correct&&r.score>0){spop(r.score);addAns(ST.tid,ST.diff);}
+  }catch(e){toast('Failed: '+(e.message||'Try again'));setPs('ps2','');setPs('ps3','');btn.disabled=false;btn.textContent='Submit Answer';}
+}
+function renderRes(r){
+  document.getElementById('resArea').style.display='block';
+  const b=document.getElementById('rbanner');b.className='rbanner '+(r.correct?'ok':'no');
+  document.getElementById('rtitle').textContent=r.correct?'Correct!':'Incorrect';
+  if(r.already_correct){
+    document.getElementById('rsub').textContent='Already solved — no additional score awarded.';
+  }else{
+    document.getElementById('rsub').textContent=r.correct?'+'+r.score+' pts (attempt '+r.attempts+')  Total: '+r.total_score:'Attempt '+r.attempts+' — edit your answer and try again.';
+  }
+  if(!r.correct){document.getElementById('sbBox').style.display='block';document.getElementById('sbGot').textContent=r.runtime_error||r.user_output||'(no output)';document.getElementById('sbExp').textContent=r.expected_output||'';document.getElementById('sbExpl').textContent=r.sandbox_explanation||'';}
+  else document.getElementById('sbBox').style.display='none';
+  const lb=document.getElementById('llmBox');
+  if(r.llm_verdict){lb.style.display='block';lb.className='ibox '+(r.correct?'lok':'lno');document.getElementById('llmV').textContent=r.is_alternative?'Alternative accepted. '+r.llm_verdict:r.llm_verdict;}
+  else lb.style.display='none';
+  if(r.hint){document.getElementById('hintBox').style.display='block';document.getElementById('hintTxt').textContent=r.hint;document.getElementById('hintBtn').style.display='none';}
+  if(r.correct){
+    // Lock inputs when correct — no more submitting
+    document.getElementById('hintBtn').style.display='none';
+    document.getElementById('tryBtn').style.display='none';
+    document.getElementById('nextBtn').style.display='inline-flex';
+    document.getElementById('subBtn').disabled=true;
+    document.getElementById('subBtn').textContent='Submit Answer';
+    for(let i=0;i<ST.nb;i++){const inp=document.getElementById('b'+i);if(inp)inp.disabled=true;}
+  } else {
+    // Wrong — keep inputs editable
+    document.getElementById('subBtn').disabled=false;
+    document.getElementById('subBtn').textContent='Submit Answer';
+    document.getElementById('tryBtn').style.display='none';
+    document.getElementById('nextBtn').style.display='none';
+  }
+}
+async function getHint(){document.getElementById('hintBtn').innerHTML='<span class="loader"></span>';document.getElementById('hintBtn').disabled=true;await submitAns(true);}
+function tryAgain(){document.getElementById('resArea').style.display='none';const hb=document.getElementById('hintBtn');hb.style.display='inline-flex';hb.disabled=false;hb.textContent='Get Hint (−10 pts)';document.getElementById('tryBtn').style.display='inline-flex';document.getElementById('nextBtn').style.display='none';document.getElementById('subBtn').disabled=false;clrAns('b',ST.nb);setPs('ps2','');setPs('ps3','');setPs('ps4','');}
+async function nextPuzzle(){document.getElementById('resArea').style.display='none';const hb=document.getElementById('hintBtn');hb.style.display='inline-flex';hb.disabled=false;hb.textContent='Get Hint (−10 pts)';document.getElementById('nextBtn').style.display='none';document.getElementById('tryBtn').style.display='inline-flex';document.getElementById('subBtn').disabled=false;await genClassic();}
+function changeTopic(){showScreen('setup',true);}
+function setPs(id,s){const e=document.getElementById(id);if(!e)return;e.className='ps'+(s?' '+s:'');}
+
+/* ══ ADAPTIVE ══ */
+function startAdaptive(){
+  Object.assign(ST,{adaptScore:0,adaptStreak:0,adaptQ:0,adaptSkill:300,adaptCorrect:0,adaptTotal:0,adaptTimedOut:false,adaptConsecCorrect:0});
+  updAdaptUI();showScreen('adaptive');loadAdaptiveQ();
+}
+function updAdaptUI(){
+  const diff=skillToDiff(ST.adaptSkill);
+  document.getElementById('aScore').textContent=ST.adaptScore;
+  document.getElementById('aStreak').textContent=ST.adaptStreak;
+  document.getElementById('aQ').textContent=ST.adaptQ;
+  document.getElementById('aSkillPts').textContent=Math.round(ST.adaptSkill);
+  document.getElementById('skillNeedle').style.left=skillToNeedle(ST.adaptSkill);
+  document.getElementById('skillValTxt').textContent=Math.round(ST.adaptSkill);
+  const badge=document.getElementById('aLevelBadge');
+  badge.className='a-level-badge '+diff;
+  badge.textContent={easy:'Easy',medium:'Medium',hard:'Hard'}[diff];
+  const acc=ST.adaptTotal>0?Math.round((ST.adaptCorrect/ST.adaptTotal)*100)+'%':'—';
+  document.getElementById('aAccuracy').textContent=acc;
+  document.getElementById('aQnum').textContent=ST.adaptQ;
+}
+async function loadAdaptiveQ(){
+  document.getElementById('aResArea').style.display='none';
+  document.getElementById('aSubBtn').disabled=false;document.getElementById('aSubBtn').textContent='Submit Answer';
+  document.getElementById('aNewPuzzleBtn').style.display='none';
+  document.getElementById('aHintBtn').style.display='inline-flex';document.getElementById('aHintBtn').disabled=false;
+  document.getElementById('aHintBox').style.display='none';
+  ST.adaptQ++;ST.adaptTimedOut=false;updAdaptUI();clearAdaptTimer();
+  const diff=skillToDiff(ST.adaptSkill);
+  const topicObj=TOPICS.find(t=>t.id===ST.adaptTid);
+  const sub=topicObj.s[Math.floor(Math.random()*topicObj.s.length)];
+  const topic=ST.adaptTname+' - '+sub;
+  document.getElementById('aBlbl').textContent='Generating...';
+  document.getElementById('aBinputs').innerHTML='';
+  document.getElementById('aPstmt').textContent='Loading question...';document.getElementById('aPcode').innerHTML='';
+  document.getElementById('aSubBtn').disabled=true;
+  try{
+    const res=await fetch('/api/questions/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,difficulty:diff})});
+    const d=await res.json();if(!d.success)throw new Error(d.message||d.error);
+    ST.adaptQid=d.data.id;ST.adaptNb=d.data.num_blanks||1;
+    renderAdaptPuzzle(d.data);startAdaptTimer(diff);
+    document.getElementById('aSubBtn').disabled=false;
+  }catch(e){
+    toast('Error generating question — click New Puzzle to try again.');
+    document.getElementById('aBlbl').textContent='Generation failed.';
+    document.getElementById('aPstmt').textContent='Could not generate a question. Click "New Puzzle" below to try again.';
+    document.getElementById('aNewPuzzleBtn').style.display='inline-flex';
+    ST.adaptQ=Math.max(0,ST.adaptQ-1);updAdaptUI();
+  }
+}
+function renderAdaptPuzzle(q){
+  document.getElementById('aPstmt').textContent=q.problem_statement;
+  let code=q.template_code,n=0;
+  if(ST.adaptNb>1){code=code.replace(/______/g,()=>{n++;return`<span class="blank-n">__ ${n} __</span>`;});}
+  else code=code.replace('______','<span class="blank">______</span>');
+  document.getElementById('aPcode').innerHTML=code;
+  document.getElementById('aBlbl').textContent=ST.adaptNb===1?'Your Answer':'Fill in all '+ST.adaptNb+' blanks';
+  buildBInputs(ST.adaptNb,q.template_code,'a','aBinputs','submitAdaptive()');
+}
+function startAdaptTimer(diff){
+  const total=diffToTime(diff);ST.adaptTimeLeft=total;ST.adaptTimeMax=total;
+  updTimerUI(total,total);
+  ST.adaptTimerH=setInterval(()=>{
+    ST.adaptTimeLeft--;updTimerUI(ST.adaptTimeLeft,total);
+    if(ST.adaptTimeLeft<=0){clearAdaptTimer();ST.adaptTimedOut=true;toast('Time up! Submit for reduced score.',3000);}
+  },1000);
+}
+function clearAdaptTimer(){if(ST.adaptTimerH){clearInterval(ST.adaptTimerH);ST.adaptTimerH=null;}}
+function updTimerUI(left,total){
+  document.getElementById('timerNum').textContent=left;
+  const circ=132,offset=circ*(1-(left/total));
+  document.getElementById('timerRing').style.strokeDashoffset=offset;
+  const color=left<=10?'var(--er)':left<=30?'var(--ac)':'var(--ok)';
+  document.getElementById('timerRing').style.stroke=color;
+  document.getElementById('timerNum').style.color=left<=10?'var(--er)':'var(--tx)';
+}
+async function submitAdaptive(hint=false){
+  if(!valAns('a',ST.adaptNb))return;
+  const timeTaken=ST.adaptTimeMax-ST.adaptTimeLeft,timedOut=ST.adaptTimedOut;
+  clearAdaptTimer();
+  const a=getAnsStr('a',ST.adaptNb);
+  const btn=document.getElementById('aSubBtn');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+  if(hint)document.getElementById('aHintBtn').disabled=true;
+  try{
+    const res=await fetch('/api/submissions/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:ST.uid,question_id:ST.adaptQid,answer:a,request_hint:hint})});
+    const d=await res.json();if(!d.success)throw new Error(d.message||d.error);
+    const r=d.data;ST.adaptTotal++;
+    let skillDelta=0,pts=0,msg='';
+    if(r.correct){
+      ST.adaptCorrect++;ST.adaptStreak++;
+      ST.adaptConsecCorrect++;          // increment consecutive correct
+      if(timedOut){skillDelta=25;pts=Math.round((r.score||50)*.4);msg='Correct — time exceeded. Reduced score.';}
+      else if(timeTaken<ST.adaptTimeMax*.5){skillDelta=100;pts=r.score||100;msg='Correct and fast!';}
+      else{skillDelta=50;pts=r.score||70;msg='Correct!';}
+    }else{
+      ST.adaptStreak=0;
+      ST.adaptConsecCorrect=0;          // reset consecutive on wrong
+      if(timedOut){skillDelta=-50;msg='Time exceeded and incorrect.';}
+      else{skillDelta=-75;msg='Incorrect.';}
+    }
+    // Hint penalty on score
+    if(hint&&r.hint){
+      msg+=' Hint used (−10 pts).';
+      ST.adaptScore=Math.max(0,ST.adaptScore-10);
+    }
+    ST.adaptSkill=Math.max(0,Math.min(1000,ST.adaptSkill+skillDelta));
+    ST.adaptScore+=pts;
+    if(pts>0)spop(pts,'var(--ac2)');
+    updAdaptUI();saveModeStats();
+    // Show hint if returned
+    if(r.hint){document.getElementById('aHintBox').style.display='block';document.getElementById('aHintTxt').textContent=r.hint;document.getElementById('aHintBtn').style.display='none';}
+    showAdaptResult(r.correct,pts,msg);
+  }catch(e){toast('Error: '+(e.message||'Try again'));btn.disabled=false;btn.textContent='Submit Answer';}
+}
+async function getAdaptHint(){
+  document.getElementById('aHintBtn').innerHTML='<span class="loader"></span>';
+  document.getElementById('aHintBtn').disabled=true;
+  await submitAdaptive(true);
+}
+function showAdaptResult(correct,pts,msg){
+  document.getElementById('aResArea').style.display='block';
+  const b=document.getElementById('aRbanner');b.className='rbanner '+(correct?'ok':'no');
+  document.getElementById('aRtitle').textContent=correct?'Correct':'Incorrect';
+  document.getElementById('aRsub').textContent=msg;
+}
+function nextAdaptive(){loadAdaptiveQ();}
+function endAdaptive(){
+  clearAdaptTimer();
+  const acc=ST.adaptTotal>0?Math.round((ST.adaptCorrect/ST.adaptTotal)*100):0;
+  toast(`Session ended — ${ST.adaptQ} questions · ${ST.adaptScore} pts · ${acc}% accuracy`,4000);
+  showScreen('home');
+}
+
+/* ══ INTERVIEW ══ */
+async function genInterview(){
+  const btn=document.getElementById('iqStartBtn'),txt=document.getElementById('iqStartTxt');
+  if(btn){btn.disabled=true;txt.innerHTML='<span class="loader"></span>';}
+  showScreen('interview');
+  document.getElementById('iqResArea').style.display='none';
+  document.getElementById('iqHintBox').style.display='none';
+  document.getElementById('iqAnswer').value='';
+  document.getElementById('iqSubBtn').disabled=false;
+  document.getElementById('iqSubBtn').textContent='Submit Solution';
+  document.getElementById('iqHintBtn').style.display='inline-flex';
+  document.getElementById('iqHintBtn').disabled=false;
+  document.getElementById('iqTitle').textContent='Generating question...';
+  document.getElementById('iqPrompt').textContent='';
+  document.getElementById('iqExamples').innerHTML='';
+  document.getElementById('iqConstraints').style.display='none';
+  document.getElementById('iqNum').textContent='Q'+(ST.iqAttempts+1);
+  document.getElementById('iqMeta').innerHTML='';
+  try{
+    const res=await fetch('/api/interview/generate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({category:ST.iqCat||'arrays',difficulty:ST.iqDiff||'medium'})});
+    const d=await res.json();if(!d.success)throw new Error(d.message||d.error);
+    const q=d.data;ST.iqLastQ=q;
+    const dc=q.difficulty?q.difficulty.substring(0,1).toLowerCase():'m';
+    document.getElementById('iqMeta').innerHTML=`<span class="tag t-pu">${q.category||'Python'}</span><span class="tag t-${dc}">${q.difficulty||'Medium'}</span>`;
+    document.getElementById('iqTitle').textContent=q.title||'Python Challenge';
+    document.getElementById('iqPrompt').textContent=q.description||'';
+    // Render examples
+    const exDiv=document.getElementById('iqExamples');exDiv.innerHTML='';
+    (q.examples||[]).forEach((ex,i)=>{
+      const d2=document.createElement('div');d2.style.cssText='background:var(--bg2);border:1px solid var(--b);border-radius:7px;padding:10px 13px;margin-bottom:8px;font-family:var(--mo);font-size:.78rem;';
+      d2.innerHTML=`<div style="color:var(--tx3);font-size:.65rem;margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em">Example ${i+1}</div>`+
+        `<div><span style="color:var(--tx3)">Input: </span><span style="color:var(--ac2)">${ex.input||''}</span></div>`+
+        `<div><span style="color:var(--tx3)">Output: </span><span style="color:var(--ok)">${ex.output||''}</span></div>`+
+        (ex.explanation?`<div style="color:var(--tx2);font-size:.72rem;margin-top:4px">${ex.explanation}</div>`:'');
+      exDiv.appendChild(d2);
+    });
+    // Constraints
+    if(q.constraints&&q.constraints.length){
+      document.getElementById('iqConstraints').style.display='block';
+      document.getElementById('iqConstraintsList').innerHTML=q.constraints.map(c=>`<div style="font-family:var(--mo);font-size:.77rem;color:var(--tx2);padding:2px 0">• ${c}</div>`).join('');
+    }
+    // Set textarea placeholder from function signature
+    if(q.function_signature){document.getElementById('iqAnswer').value=q.function_signature;}
+  }catch(e){
+    toast('Failed to generate question: '+(e.message||'Try again'));
+    document.getElementById('iqTitle').textContent='Generation failed — try New Question';
+  }finally{
+    if(btn){btn.disabled=!(ST.iqDiff&&ST.iqCat);txt.textContent='Generate Question';}
+  }
+}
+
+async function submitInterview(){
+  const code=document.getElementById('iqAnswer').value.trim();
+  if(!code||code.length<10){toast('Please write your solution first.');return;}
+  if(!ST.iqLastQ){toast('No question loaded — click New Question first.');return;}
+  const btn=document.getElementById('iqSubBtn');
+  btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+  ST.iqAttempts++;
+  document.getElementById('iqNum').textContent='Q'+ST.iqAttempts;
+  try{
+    const res=await fetch('/api/interview/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question:ST.iqLastQ,user_code:code})});
+    const d=await res.json();if(!d.success)throw new Error(d.message||d.error);
+    const r=d.data;
+    // Score
+    const pts=Math.round((r.score||0)/10);
+    if(r.verdict==='Correct'){ST.iqSolved++;ST.iqScore+=pts;if(pts>0)spop(pts,'var(--pu)');}
+    else if(r.verdict==='Partially Correct'){ST.iqScore+=Math.floor(pts/2);}
+    document.getElementById('iqScore').textContent=ST.iqScore;
+    document.getElementById('iqSolved').textContent=ST.iqSolved;
+    document.getElementById('iqAttempts').textContent=ST.iqAttempts;
+    saveModeStats();
+    // Show result
+    const resDiv=document.getElementById('iqResult');
+    const verdColor=r.verdict==='Correct'?'var(--ok)':r.verdict==='Partially Correct'?'var(--ac)':'var(--er)';
+    document.getElementById('iqVerdict').innerHTML=`<span style="color:${verdColor};font-size:1.1rem;font-weight:600">${r.verdict||'Evaluated'}</span> <span style="color:var(--tx3);font-size:.8rem">· ${r.score||0}/100</span>`;
+    document.getElementById('iqFeedback').textContent=r.feedback||'';
+    document.getElementById('iqScoreRow').innerHTML=
+      `<span style="color:var(--tx3);font-size:.75rem">Time: <strong style="color:var(--ac2)">${r.time_complexity||'?'}</strong></span>`+
+      `<span style="color:var(--tx3);font-size:.75rem;margin-left:14px">Space: <strong style="color:var(--ac2)">${r.space_complexity||'?'}</strong></span>`+
+      (r.improvement?`<div style="color:var(--tx2);font-size:.78rem;margin-top:6px;padding:8px 10px;background:var(--bg2);border-radius:6px;border-left:3px solid var(--ac)">💡 ${r.improvement}</div>`:'');
+    document.getElementById('iqResArea').style.display='block';
+  }catch(e){toast('Evaluation failed: '+(e.message||'Try again'));btn.disabled=false;}
+  finally{btn.textContent='Submit Solution';}
+}
+
+async function getIQHint(){
+  if(!ST.iqLastQ){toast('No question loaded.');return;}
+  const btn=document.getElementById('iqHintBtn');
+  btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+  ST.iqScore=Math.max(0,ST.iqScore-10);
+  document.getElementById('iqScore').textContent=ST.iqScore;
+  const code=document.getElementById('iqAnswer').value.trim();
+  try{
+    const res=await fetch('/api/interview/hint',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question:ST.iqLastQ,user_code:code})});
+    const d=await res.json();if(!d.success)throw new Error(d.message||d.error);
+    document.getElementById('iqHintTxt').textContent=d.data.hint||'Think about the edge cases and try a different approach.';
+    document.getElementById('iqHintBox').style.display='block';
+    btn.style.display='none';
+  }catch(e){toast('Could not get hint.');btn.disabled=false;btn.textContent='Get Hint (−10 pts)';}
+}
+
+function iqTryAgain(){
+  document.getElementById('iqResArea').style.display='none';
+  document.getElementById('iqSubBtn').disabled=false;
+  document.getElementById('iqSubBtn').textContent='Submit Solution';
+  document.getElementById('iqAnswer').focus();
+}
+
+/* ══ DRAG & FILL + HANGMAN LIVES ══ */
+const DRAG_BLANKS = {easy:2, medium:4, hard:6};
+const DRAG_OPTS   = {easy:8, medium:12, hard:20};
+const DRAG_LIVES  = 5; // always 5 lives regardless of difficulty
+
+const DHM_PARTS=['dhm-head','dhm-body','dhm-larm','dhm-rarm','dhm-lleg','dhm-rleg','dhm-f1','dhm-f2','dhm-f3','dhm-f4','dhm-mouth'];
+
+let dragState={blanks:[],filled:{},options:[],qid:null,lives:5,maxLives:5,wrongDrops:0,dead:false};
+
+function dhmReset(){
+  DHM_PARTS.forEach(id=>{const el=document.getElementById(id);if(el){el.style.display='none';el.style.animation='';}});
+  document.getElementById('dragWrongList').innerHTML='';
+}
+
+function dhmRenderHearts(remaining,max){
+  const div=document.getElementById('dragHearts');div.innerHTML='';
+  for(let i=0;i<max;i++){
+    const h=document.createElement('span');
+    h.className='hm-heart'+(i>=remaining?' dead':'');
+    h.textContent='❤';div.appendChild(h);
+  }
+}
+
+function dhmShowPart(wrongCount,maxWrong){
+  // Show parts proportionally to wrong/max
+  // Parts: head(1),body(2),larm(3),rarm(4),lleg(5) — then on death rleg+face
+  const seq=['dhm-head','dhm-body','dhm-larm','dhm-rarm','dhm-lleg'];
+  if(wrongCount<=seq.length){
+    const el=document.getElementById(seq[wrongCount-1]);
+    if(el){el.style.display='block';el.style.animation='hmPop .45s cubic-bezier(.34,1.56,.64,1)';}
+  }
+  if(wrongCount>=maxWrong){
+    const rleg=document.getElementById('dhm-rleg');if(rleg)rleg.style.display='block';
+    ['dhm-f1','dhm-f2','dhm-f3','dhm-f4','dhm-mouth'].forEach(id=>{
+      const e=document.getElementById(id);
+      if(e){e.style.display='block';e.style.animation='hmPop .3s ease';}
+    });
+    // Shake the SVG
+    const svg=document.getElementById('dragHmSvg');
+    if(svg){svg.style.animation='dhmShake .5s ease';setTimeout(()=>svg.style.animation='',600);}
+  }
+}
+
+function dhmAddWrongBadge(val){
+  const span=document.createElement('span');
+  span.style.cssText='font-family:var(--mo);font-size:.68rem;padding:2px 7px;border-radius:4px;background:rgba(224,112,112,.12);border:1px solid rgba(224,112,112,.3);color:var(--er)';
+  span.textContent=val;
+  document.getElementById('dragWrongList').appendChild(span);
+}
+
+async function genDrag(){
+  const btn=document.getElementById('dragGenBtn'),txt=document.getElementById('dragGenTxt');
+  btn.disabled=true;txt.innerHTML='<span class="loader"></span>';
+  document.getElementById('dragResArea').style.display='none';
+  dhmReset();
+  const blanksWanted = DRAG_BLANKS[ST.dragDiff]||2;
+  const optsWanted   = DRAG_OPTS[ST.dragDiff]||8;
+  // Lives = blanksWanted + 1 (fair challenge)
+  dragState.lives=DRAG_LIVES;
+  dragState.maxLives=DRAG_LIVES;
+  dragState.wrongDrops=0;
+  dragState.dead=false;
+  dhmRenderHearts(DRAG_LIVES,DRAG_LIVES);
+  try{
+    const res=await fetch('/api/questions/generate',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({topic:ST.dragTname+' - '+ST.dragSub, difficulty:ST.dragDiff, num_blanks:blanksWanted})
+    });
+    const d=await res.json();if(!d.success)throw new Error(d.message||d.error);
+    const q=d.data;
+    dragState.qid=q.id;ST.dragQid=q.id;
+    const answers=q.answers_list||[q.correct_answer];
+    // Validate answers before using
+    const validAnswers=answers.filter(a=>a&&String(a).trim().length>0);
+    if(validAnswers.length===0){throw new Error('No valid answers in generated question');}
+    dragState.blanks=validAnswers;dragState.filled={};
+    // Options MUST include all correct answers + distractors
+    const distractors=genDistractors(validAnswers, optsWanted - validAnswers.length);
+    // Always include all correct answers, then pad with distractors
+    const allOptions=[...validAnswers,...distractors];
+    dragState.options=shuffle(allOptions);
+    const dc=q.difficulty.substring(0,1);
+    const st=q.topic.length>34?q.topic.substring(0,34)+'...':q.topic;
+    document.getElementById('dragMeta').innerHTML=`<span class="tag t-tp">${st}</span><span class="tag t-${dc}">${q.difficulty.charAt(0).toUpperCase()+q.difficulty.slice(1)}</span><span class="tag t-b">${answers.length} blank${answers.length>1?'s':''}</span>`;
+    document.getElementById('dragTitle').textContent=q.title;
+    document.getElementById('dragStmt').textContent=q.problem_statement;
+    renderDragCode(q.template_code,answers.length);
+    renderDragOptions(dragState.options);
+    showScreen('drag');
+  }catch(e){toast('Generation failed: '+(e.message||'Try again'));}
+  finally{btn.disabled=false;txt.textContent='Generate Puzzle';}
+}
+
+function genDistractors(answers,total){
+  const pool=['append()','len()','range()','print()','str()','int()','float()','sorted()','list()','dict()','set()','+','-','*','**','%','//','==','!=','<=','>=','and','or','not','in','is','True','False','None','break','continue','pass','return','for','while','if','else','+=','-=','*=',':','.upper()','.lower()','.strip()','.split()','.join()','type()','input()','tuple()','open()','max()','min()','sum()','zip()','map()','filter()','enumerate()','reversed()','abs()','round()','chr()','ord()','hex()','bin()','hash()','id()','vars()','dir()','help()','repr()','format()','getattr()','hasattr()','setattr()','delattr()','isinstance()','issubclass()'];
+  const used=new Set(answers.map(a=>String(a).trim().toLowerCase()));
+  return shuffle(pool.filter(p=>!used.has(p.toLowerCase()))).slice(0,Math.max(0,total));
+}
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+function renderDragCode(template,nb){
+  const block=document.getElementById('dragCodeBlock');block.innerHTML='';
+  const lines=template.split('\n');let blankIdx=0;
+  lines.forEach(line=>{
+    const div=document.createElement('div');div.className='drag-line';
+    if(!line.includes('______')){const s=document.createElement('span');s.className='ctxt';s.textContent=line||'\u00a0';div.appendChild(s);}
+    else{
+      const parts=line.split('______');
+      parts.forEach((part,pi)=>{
+        if(part){const s=document.createElement('span');s.className='ctxt';s.textContent=part;div.appendChild(s);}
+        if(pi<parts.length-1&&blankIdx<nb){
+          const dz=document.createElement('div');dz.className='dz';dz.dataset.idx=blankIdx;dz.textContent='drop here';
+          dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+          dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+          dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');handleDrop(dz,draggedChip);});
+          dz.addEventListener('click',()=>{if(dz.dataset.chip)returnChip(dz);});
+          div.appendChild(dz);blankIdx++;
+        }
+      });
+    }
+    block.appendChild(div);
+  });
+}
+
+function renderDragOptions(opts){
+  const tray=document.getElementById('optionsTray');tray.innerHTML='';
+  opts.forEach(opt=>{
+    const chip=document.createElement('div');chip.className='dchip';chip.textContent=opt;chip.dataset.val=opt;chip.draggable=true;
+    chip.addEventListener('dragstart',()=>{draggedChip=chip;chip.classList.add('dragging');});
+    chip.addEventListener('dragend',()=>chip.classList.remove('dragging'));
+    tray.appendChild(chip);
+  });
+}
+
+function handleDrop(dz,chip){
+  if(!chip||chip.classList.contains('used')||chip.classList.contains('used-wrong')||dragState.dead)return;
+  if(dz.dataset.chip)returnChip(dz);
+  const val=chip.dataset.val;
+  const idx=parseInt(dz.dataset.idx);
+  const correctVal=String(dragState.blanks[idx]||'').trim();
+  const isOk=val.trim()===correctVal;
+
+  if(isOk){
+    // Correct drop
+    dz.textContent=val;dz.dataset.chip=val;
+    dz.classList.add('filled','correct');
+    dz.classList.remove('over');
+    chip.classList.add('used');
+    dragState.filled[idx]=val;
+    // Check all done
+    if(Object.keys(dragState.filled).length===dragState.blanks.length){
+      setTimeout(()=>finishDrag(true),300);
+    }
+  }else{
+    // Wrong drop — lose a life
+    dragState.wrongDrops++;
+    dragState.lives=Math.max(0,dragState.lives-1);
+    chip.classList.add('used-wrong');
+    dhmRenderHearts(dragState.lives,dragState.maxLives);
+    dhmAddWrongBadge(val);
+    dhmShowPart(dragState.wrongDrops,dragState.maxLives);
+    // Flash the drop zone red
+    dz.classList.add('wrong');
+    setTimeout(()=>{dz.classList.remove('wrong');},700);
+    if(dragState.lives<=0){
+      dragState.dead=true;
+      // Reveal answers
+      document.querySelectorAll('.dz').forEach(z=>{
+        if(!z.dataset.chip){
+          const i2=parseInt(z.dataset.idx);
+          z.textContent=dragState.blanks[i2]||'?';
+          z.classList.add('wrong');
+        }
+      });
+      setTimeout(()=>finishDrag(false),700);
+    }
+  }
+}
+
+function returnChip(dz){
+  if(!dz.dataset.chip)return;
+  document.querySelectorAll('.dchip').forEach(c=>{if(c.dataset.val===dz.dataset.chip&&c.classList.contains('used'))c.classList.remove('used');});
+  const idx=parseInt(dz.dataset.idx);
+  delete dragState.filled[idx];
+  dz.textContent='drop here';delete dz.dataset.chip;
+  dz.classList.remove('filled','correct','wrong');
+}
+
+function resetDrag(){
+  if(dragState.dead)return; // game over, use New Puzzle
+  dragState.filled={};
+  document.querySelectorAll('.dz').forEach(dz=>{
+    dz.textContent='drop here';delete dz.dataset.chip;
+    dz.classList.remove('filled','correct','wrong');
+  });
+  document.querySelectorAll('.dchip').forEach(c=>c.classList.remove('used','used-wrong'));
+  document.getElementById('dragResArea').style.display='none';
+  // RESET lives and gallows too
+  dragState.lives=dragState.maxLives;
+  dragState.wrongDrops=0;
+  dhmReset();
+  dhmRenderHearts(dragState.lives,dragState.maxLives);
+}
+
+function finishDrag(won){
+  ST.dragTotal++;
+  const nb=dragState.blanks.length;
+  // Base score: 100 per blank × difficulty multiplier
+  const dMult={easy:1,medium:1.5,hard:2};
+  const baseScore=Math.round(100*nb*(dMult[ST.dragDiff]||1));
+  let awarded=0;
+  if(won){
+    awarded=baseScore;
+    ST.dragStreak++;ST.dragScore+=awarded;
+    spop(awarded,'var(--ok)');
+  }else{
+    // Death penalty: score halved (lose half of what you would have earned)
+    ST.dragStreak=0;
+    // No points awarded on death
+    awarded=0;
+  }
+  document.getElementById('dragScore').textContent=ST.dragScore;
+  document.getElementById('dragStreak').textContent=ST.dragStreak;
+  document.getElementById('dragTotal').textContent=ST.dragTotal;
+  saveModeStats();
+  const banner=document.getElementById('dragBanner');banner.className='rbanner '+(won?'ok':'no');
+  document.getElementById('dragRTitle').textContent=won?'You survived! 🎉':'Hanged! 💀';
+  document.getElementById('dragRSub').textContent=won
+    ?`All ${nb} blanks correct in ${dragState.wrongDrops} wrong attempt${dragState.wrongDrops!==1?'s':''} · +${awarded} pts!`
+    :`${dragState.wrongDrops} wrong drop${dragState.wrongDrops!==1?'s':''} — 0 pts this round. Study the correct answers above!`;
+  document.getElementById('dragResArea').style.display='block';
+}
+
+async function getDragHint(){
+  if(!ST.dragQid){toast('No active puzzle to hint.');return;}
+  const zones=document.querySelectorAll('.dz');
+  const userParts=[];
+  zones.forEach(dz=>userParts.push(dz.dataset.chip||'(empty)'));
+  const ansStr=userParts.join(' ||| ');
+  try{
+    const res=await fetch('/api/submissions/',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id:ST.uid,question_id:ST.dragQid,answer:ansStr,request_hint:true})});
+    const d=await res.json();if(!d.success)throw new Error(d.message||d.error);
+    const r=d.data;
+    if(r.hint){toast('Hint: '+r.hint,5000);}
+    if(r.total_score!==undefined){ST.score=r.total_score;document.getElementById('hdrScore').textContent=ST.score;}
+  }catch(e){toast('Could not get hint.');}
+}
+
+/* ══ DASHBOARD ══ */
+let dashTab='classic';
+function showDashTab(tab,btn){
+  dashTab=tab;
+  document.querySelectorAll('.mode-tab').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  loadAndRenderDash();
+}
+function renderDash(){
+  const el=document.getElementById('dashContent');
+  if(dashTab==='classic'){
+    let rows='',totalAns=0,unlockedMed=0,unlockedHard=0;
+    TOPICS.forEach(t=>{
+      const e=getAns(t.id,'easy'),m=getAns(t.id,'medium'),h=getAns(t.id,'hard');
+      totalAns+=e+m+h;if(isUnlk(t.id,'medium'))unlockedMed++;if(isUnlk(t.id,'hard'))unlockedHard++;
+      rows+=`<tr><td>${t.n}</td><td style="color:var(--ok)">${e}/10</td><td style="color:var(--ac)">${m}/10</td><td style="color:var(--er)">${h}/10</td></tr>`;
+    });
+    el.innerHTML=`<div class="dash-grid">
+      <div class="dash-card"><span class="dash-num" style="color:var(--ac)">${ST.score}</span><span class="dash-lbl">Total Score</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--ok)">${totalAns}</span><span class="dash-lbl">Puzzles Solved</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--ac2)">${unlockedMed}</span><span class="dash-lbl">Medium Unlocked</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--er)">${unlockedHard}</span><span class="dash-lbl">Hard Unlocked</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--tx)">${ST.streak}</span><span class="dash-lbl">Streak</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--tx2)">15</span><span class="dash-lbl">Topics</span></div>
+    </div>
+    <table class="topic-table"><thead><tr><th>Topic</th><th>Easy</th><th>Medium</th><th>Hard</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }else if(dashTab==='adaptive'){
+    const acc=ST.adaptTotal>0?Math.round((ST.adaptCorrect/ST.adaptTotal)*100):0;
+    const diff=skillToDiff(ST.adaptSkill);
+    el.innerHTML=`<div class="dash-grid">
+      <div class="dash-card"><span class="dash-num" style="color:var(--ac2)">${ST.adaptScore}</span><span class="dash-lbl">Adaptive Score</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--ok)">${ST.adaptCorrect}</span><span class="dash-lbl">Correct</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--er)">${ST.adaptTotal-ST.adaptCorrect}</span><span class="dash-lbl">Incorrect</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--ac)">${acc}%</span><span class="dash-lbl">Accuracy</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--tx)">${Math.round(ST.adaptSkill)}</span><span class="dash-lbl">Skill Score</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--tx2)">${ST.adaptQ}</span><span class="dash-lbl">Questions</span></div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:16px 18px;font-size:.83rem;color:var(--tx2);line-height:1.7;">
+      Current level: <strong style="color:var(--tx)">${diff.charAt(0).toUpperCase()+diff.slice(1)}</strong> &nbsp;·&nbsp;
+      Skill score: <strong style="color:var(--ac)">${Math.round(ST.adaptSkill)} / 1000</strong><br>
+      <div style="display:flex;gap:8px;font-size:.7rem;margin:10px 0 5px"><span style="color:var(--ok)">■ Easy 0–400</span><span style="color:var(--ac)">■ Medium 400–700</span><span style="color:var(--er)">■ Hard 700–1000</span></div>
+      <div class="skill-bar" style="height:7px;flex:1;position:relative;background:var(--b);border-radius:3px;overflow:hidden;">
+        <div class="skill-zones"><div class="sz-easy"></div><div class="sz-med"></div><div class="sz-hard"></div></div>
+        <div class="skill-needle" style="left:${skillToNeedle(ST.adaptSkill)};"></div>
+      </div>
+    </div>`;
+  }else if(dashTab==='drag'){
+    el.innerHTML=`<div class="dash-grid">
+      <div class="dash-card"><span class="dash-num" style="color:var(--ok)">${ST.dragScore}</span><span class="dash-lbl">Drag Score</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--ac)">${ST.dragStreak}</span><span class="dash-lbl">Best Streak</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--ac2)">${ST.dragTotal}</span><span class="dash-lbl">Puzzles Played</span></div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:16px 18px;font-size:.83rem;color:var(--tx2);">Scoring: 100 × blanks × difficulty multiplier per correct puzzle. 5 lives per round.</div>`;
+  }else{
+    el.innerHTML=`<div class="dash-grid">
+      <div class="dash-card"><span class="dash-num" style="color:var(--pu)">${ST.iqScore}</span><span class="dash-lbl">Interview Score</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--ok)">${ST.iqSolved}</span><span class="dash-lbl">Solved</span></div>
+      <div class="dash-card"><span class="dash-num" style="color:var(--ac2)">${ST.iqAttempts}</span><span class="dash-lbl">Attempted</span></div>
+    </div>
+    <div style="background:var(--bg2);border:1px solid var(--b);border-radius:10px;padding:16px 18px;font-size:.83rem;color:var(--tx2);">LeetCode-style Python challenges. Solve more to improve your interview readiness score.</div>`;
+  }
+}
+document.addEventListener('DOMContentLoaded',()=>{/* dashboard rendered on open via loadAndRenderDash */});
+
+</script>
+</body>
+</html>
